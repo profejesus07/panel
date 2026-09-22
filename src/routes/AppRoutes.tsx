@@ -1,3 +1,4 @@
+import type { ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
@@ -5,6 +6,7 @@ import { PortalLayout } from '@/layouts/PortalLayout'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
+import { InstitutionPage } from '@/pages/admin/InstitutionPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
@@ -12,6 +14,12 @@ import { ADMIN_NAV_ITEMS, PARENT_NAV_ITEMS, STUDENT_NAV_ITEMS } from '@/routes/n
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleHomeRedirect } from '@/routes/RoleHomeRedirect'
 import { RoleRoute } from '@/routes/RoleRoute'
+
+// Módulos de administración ya implementados, por segmento de ruta. Los que
+// falten en este mapa se muestran como "en construcción" hasta su fase.
+const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
+  institucion: InstitutionPage,
+}
 
 export function AppRoutes() {
   return (
@@ -26,13 +34,16 @@ export function AppRoutes() {
         <Route element={<RoleRoute allowed={['admin']} />}>
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<DashboardPage />} />
-            {ADMIN_NAV_ITEMS.filter((item) => item.segment !== '').map((item) => (
-              <Route
-                key={item.segment}
-                path={item.segment}
-                element={<ComingSoonPage title={item.label} />}
-              />
-            ))}
+            {ADMIN_NAV_ITEMS.filter((item) => item.segment !== '').map((item) => {
+              const Page = ADMIN_PAGES[item.segment]
+              return (
+                <Route
+                  key={item.segment}
+                  path={item.segment}
+                  element={Page ? <Page /> : <ComingSoonPage title={item.label} />}
+                />
+              )
+            })}
           </Route>
         </Route>
 
