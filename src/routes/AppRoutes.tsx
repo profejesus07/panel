@@ -5,14 +5,17 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { PortalLayout } from '@/layouts/PortalLayout'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { AnnouncementsPage } from '@/pages/admin/AnnouncementsPage'
+import { AttendancePage } from '@/pages/admin/AttendancePage'
+import { BehaviorRecordsPage } from '@/pages/admin/BehaviorRecordsPage'
 import { ConfigurationPage } from '@/pages/admin/ConfigurationPage'
 import { CoursesPage } from '@/pages/admin/CoursesPage'
-import { AttendancePage } from '@/pages/admin/AttendancePage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { GradesPage } from '@/pages/admin/GradesPage'
 import { GuardiansPage } from '@/pages/admin/GuardiansPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
 import { JustificationsPage } from '@/pages/admin/JustificationsPage'
+import { OfficialRecordsPage } from '@/pages/admin/OfficialRecordsPage'
 import { StudentsPage } from '@/pages/admin/StudentsPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -33,6 +36,9 @@ const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   calificaciones: GradesPage,
   asistencia: AttendancePage,
   justificaciones: JustificationsPage,
+  convivencia: BehaviorRecordsPage,
+  actas: OfficialRecordsPage,
+  anuncios: AnnouncementsPage,
 }
 
 export function AppRoutes() {
