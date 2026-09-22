@@ -1,0 +1,369 @@
+import { BookOpen, CalendarRange, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { type FormEvent, useState } from 'react'
+import { Badge } from '@/components/ui/Badge'
+import { Button } from '@/components/ui/Button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
+import { EmptyState } from '@/components/ui/EmptyState'
+import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
+import { Select } from '@/components/ui/Select'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useConfirm } from '@/hooks/useConfirm'
+import { useSimpleQuery } from '@/hooks/useSimpleQuery'
+import { useToast } from '@/hooks/useToast'
+import {
+  createAcademicPeriod,
+  createSubject,
+  deleteAcademicPeriod,
+  deleteSubject,
+  listAcademicPeriods,
+  listSubjects,
+  updateAcademicPeriod,
+  type AcademicPeriod,
+  type AcademicPeriodInput,
+  type Subject,
+} from '@/services/academicCatalog.service'
+import { Constants } from '@/types/database.types'
+import { COURSE_STATUS_LABELS } from '@/utils/labels'
+
+export function ConfigurationPage() {
+  return (
+    <div>
+      <div className="mb-6">
+        <h1 className="text-2xl font-bold text-neutral-900">Configuración</h1>
+        <p className="text-sm text-neutral-500">Catálogos académicos usados en calificaciones.</p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <SubjectsCard />
+        <AcademicPeriodsCard />
+      </div>
+    </div>
+  )
+}
+
+function SubjectsCard() {
+  const { showToast } = useToast()
+  const confirm = useConfirm()
+  const [name, setName] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  const {
+    data: subjects,
+    loading,
+    reload,
+  } = useSimpleQuery(listSubjects, [] as Subject[], () =>
+    showToast('error', 'No se pudieron cargar las asignaturas.'),
+  )
+
+  async function handleAdd(event: FormEvent) {
+    event.preventDefault()
+    if (!name.trim()) return
+
+    setSaving(true)
+    try {
+      await createSubject({ name: name.trim() })
+      setName('')
+      reload()
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'No se pudo crear la asignatura.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(subject: Subject) {
+    const confirmed = await confirm({
+      title: `¿Eliminar "${subject.name}"?`,
+      description: 'No podrás eliminarla si tiene calificaciones registradas.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!confirmed) return
+
+    try {
+      await deleteSubject(subject.id)
+      reload()
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'No se pudo eliminar la asignatura.')
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <BookOpen className="h-4 w-4 text-brand-700" />
+          Asignaturas
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleAdd} className="mb-4 flex gap-2">
+          <Input
+            placeholder="Nueva asignatura..."
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="flex-1"
+          />
+          <Button type="submit" loading={saving} disabled={!name.trim()}>
+            <Plus className="h-4 w-4" />
+            Agregar
+          </Button>
+        </form>
+
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 w-full" />
+            ))}
+          </div>
+        ) : subjects.length === 0 ? (
+          <EmptyState title="Sin asignaturas" description="Agrega la primera asignatura arriba." />
+        ) : (
+          <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
+            {subjects.map((subject) => (
+              <li key={subject.id} className="flex items-center justify-between px-3.5 py-2 text-sm">
+                {subject.name}
+                <button
+                  type="button"
+                  onClick={() => void handleDelete(subject)}
+                  className="rounded-md p-1 text-neutral-400 hover:bg-danger-50 hover:text-danger-600"
+                  aria-label={`Eliminar ${subject.name}`}
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+const EMPTY_PERIOD_FORM: AcademicPeriodInput = {
+  name: '',
+  academic_year: new Date().getFullYear().toString(),
+  start_date: '',
+  end_date: '',
+  status: 'activo',
+}
+
+function AcademicPeriodsCard() {
+  const { showToast } = useToast()
+  const confirm = useConfirm()
+
+  const [modalOpen, setModalOpen] = useState(false)
+  const [editing, setEditing] = useState<AcademicPeriod | null>(null)
+  const [form, setForm] = useState<AcademicPeriodInput>(EMPTY_PERIOD_FORM)
+  const [errors, setErrors] = useState<Partial<Record<keyof AcademicPeriodInput, string>>>({})
+  const [saving, setSaving] = useState(false)
+
+  const {
+    data: periods,
+    loading,
+    reload,
+  } = useSimpleQuery(listAcademicPeriods, [] as AcademicPeriod[], () =>
+    showToast('error', 'No se pudieron cargar los períodos académicos.'),
+  )
+
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY_PERIOD_FORM)
+    setErrors({})
+    setModalOpen(true)
+  }
+
+  function openEdit(period: AcademicPeriod) {
+    setEditing(period)
+    setForm({
+      name: period.name,
+      academic_year: period.academic_year,
+      start_date: period.start_date,
+      end_date: period.end_date,
+      status: period.status,
+    })
+    setErrors({})
+    setModalOpen(true)
+  }
+
+  function validate(): boolean {
+    const next: Partial<Record<keyof AcademicPeriodInput, string>> = {}
+    if (!form.name.trim()) next.name = 'El nombre es obligatorio.'
+    if (!form.academic_year.trim()) next.academic_year = 'El año lectivo es obligatorio.'
+    if (!form.start_date) next.start_date = 'La fecha de inicio es obligatoria.'
+    if (!form.end_date) next.end_date = 'La fecha de fin es obligatoria.'
+    else if (form.start_date && form.end_date < form.start_date) {
+      next.end_date = 'Debe ser posterior a la fecha de inicio.'
+    }
+    setErrors(next)
+    return Object.keys(next).length === 0
+  }
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault()
+    if (!validate()) return
+
+    setSaving(true)
+    try {
+      if (editing) {
+        await updateAcademicPeriod(editing.id, form)
+        showToast('success', 'Período actualizado correctamente.')
+      } else {
+        await createAcademicPeriod(form)
+        showToast('success', 'Período creado correctamente.')
+      }
+      setModalOpen(false)
+      reload()
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'No se pudo guardar el período.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  async function handleDelete(period: AcademicPeriod) {
+    const confirmed = await confirm({
+      title: `¿Eliminar el período "${period.name}"?`,
+      description: 'No podrás eliminarlo si tiene calificaciones registradas.',
+      confirmLabel: 'Eliminar',
+      variant: 'danger',
+    })
+    if (!confirmed) return
+
+    try {
+      await deleteAcademicPeriod(period.id)
+      showToast('success', 'Período eliminado correctamente.')
+      reload()
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'No se pudo eliminar el período.')
+    }
+  }
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <CalendarRange className="h-4 w-4 text-brand-700" />
+          Períodos académicos
+        </CardTitle>
+        <Button size="sm" onClick={openCreate}>
+          <Plus className="h-4 w-4" />
+          Nuevo
+        </Button>
+      </CardHeader>
+      <CardContent>
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
+          </div>
+        ) : periods.length === 0 ? (
+          <EmptyState
+            icon={CalendarRange}
+            title="Sin períodos académicos"
+            description="Crea el primer período para poder registrar calificaciones."
+          />
+        ) : (
+          <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200">
+            {periods.map((period) => (
+              <li key={period.id} className="flex items-center justify-between px-3.5 py-2.5 text-sm">
+                <div>
+                  <p className="font-medium text-neutral-900">
+                    {period.name} <span className="text-neutral-400">· {period.academic_year}</span>
+                  </p>
+                  <p className="text-xs text-neutral-500">
+                    {period.start_date} — {period.end_date}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant={period.status === 'activo' ? 'success' : 'neutral'}>
+                    {COURSE_STATUS_LABELS[period.status]}
+                  </Badge>
+                  <button
+                    type="button"
+                    onClick={() => openEdit(period)}
+                    className="rounded-md p-1.5 text-neutral-400 hover:bg-neutral-100 hover:text-neutral-600"
+                    aria-label="Editar período"
+                  >
+                    <Pencil className="h-4 w-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleDelete(period)}
+                    className="rounded-md p-1.5 text-neutral-400 hover:bg-danger-50 hover:text-danger-600"
+                    aria-label="Eliminar período"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </CardContent>
+
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar período académico' : 'Nuevo período académico'}
+        size="sm"
+      >
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+          <Input
+            label="Nombre"
+            placeholder="Ej. Período 1"
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            error={errors.name}
+          />
+          <Input
+            label="Año lectivo"
+            value={form.academic_year}
+            onChange={(e) => setForm((f) => ({ ...f, academic_year: e.target.value }))}
+            error={errors.academic_year}
+          />
+          <div className="grid grid-cols-2 gap-3">
+            <Input
+              label="Fecha de inicio"
+              type="date"
+              value={form.start_date}
+              onChange={(e) => setForm((f) => ({ ...f, start_date: e.target.value }))}
+              error={errors.start_date}
+            />
+            <Input
+              label="Fecha de fin"
+              type="date"
+              value={form.end_date}
+              onChange={(e) => setForm((f) => ({ ...f, end_date: e.target.value }))}
+              error={errors.end_date}
+            />
+          </div>
+          <Select
+            label="Estado"
+            value={form.status}
+            onChange={(e) =>
+              setForm((f) => ({ ...f, status: e.target.value as AcademicPeriod['status'] }))
+            }
+          >
+            {Constants.public.Enums.course_status.map((status) => (
+              <option key={status} value={status}>
+                {COURSE_STATUS_LABELS[status]}
+              </option>
+            ))}
+          </Select>
+
+          <div className="flex justify-end gap-3 pt-2">
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
+            <Button type="submit" loading={saving}>
+              {editing ? 'Guardar cambios' : 'Crear período'}
+            </Button>
+          </div>
+        </form>
+      </Modal>
+    </Card>
+  )
+}

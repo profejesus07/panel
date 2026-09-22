@@ -5,6 +5,7 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { PortalLayout } from '@/layouts/PortalLayout'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { ConfigurationPage } from '@/pages/admin/ConfigurationPage'
 import { CoursesPage } from '@/pages/admin/CoursesPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { GuardiansPage } from '@/pages/admin/GuardiansPage'
@@ -25,6 +26,7 @@ const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   estudiantes: StudentsPage,
   padres: GuardiansPage,
   cursos: CoursesPage,
+  configuracion: ConfigurationPage,
 }
 
 export function AppRoutes() {
