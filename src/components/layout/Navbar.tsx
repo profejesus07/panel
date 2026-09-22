@@ -1,12 +1,7 @@
 import { ChevronDown, LogOut, Menu, User as UserIcon } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '@/hooks/useAuth'
-
-const ROLE_LABELS: Record<string, string> = {
-  admin: 'Administrador',
-  estudiante: 'Estudiante',
-  padre: 'Padre de familia',
-}
+import { USER_ROLE_LABELS } from '@/utils/labels'
 
 export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
   const { profile, signOut } = useAuth()
@@ -39,7 +34,7 @@ export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
               {profile?.fullName ?? 'Usuario'}
             </span>
             <span className="block text-xs text-neutral-500">
-              {profile ? ROLE_LABELS[profile.role] : ''}
+              {profile ? USER_ROLE_LABELS[profile.role] : ''}
             </span>
           </span>
           <ChevronDown className="h-4 w-4 text-neutral-400" />

@@ -5,6 +5,7 @@ import { AuthLayout } from '@/layouts/AuthLayout'
 import { PortalLayout } from '@/layouts/PortalLayout'
 import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
+import { CoursesPage } from '@/pages/admin/CoursesPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -19,6 +20,7 @@ import { RoleRoute } from '@/routes/RoleRoute'
 // falten en este mapa se muestran como "en construcción" hasta su fase.
 const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   institucion: InstitutionPage,
+  cursos: CoursesPage,
 }
 
 export function AppRoutes() {
