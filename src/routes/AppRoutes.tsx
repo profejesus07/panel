@@ -7,6 +7,7 @@ import { ComingSoonPage } from '@/pages/ComingSoonPage'
 import { NotFoundPage } from '@/pages/NotFoundPage'
 import { CoursesPage } from '@/pages/admin/CoursesPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
+import { GuardiansPage } from '@/pages/admin/GuardiansPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
 import { StudentsPage } from '@/pages/admin/StudentsPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
@@ -22,6 +23,7 @@ import { RoleRoute } from '@/routes/RoleRoute'
 const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   institucion: InstitutionPage,
   estudiantes: StudentsPage,
+  padres: GuardiansPage,
   cursos: CoursesPage,
 }
 
