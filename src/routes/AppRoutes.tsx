@@ -7,6 +7,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
+import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
 import { ADMIN_NAV_ITEMS, PARENT_NAV_ITEMS, STUDENT_NAV_ITEMS } from '@/routes/navigation'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleHomeRedirect } from '@/routes/RoleHomeRedirect'
@@ -18,6 +19,7 @@ export function AppRoutes() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/recuperar-password" element={<ForgotPasswordPage />} />
+        <Route path="/recuperar-password/confirmar" element={<ResetPasswordPage />} />
       </Route>
 
       <Route element={<ProtectedRoute />}>
