@@ -2,7 +2,7 @@
 
 Sistema web de gestión y administración escolar: institución, estudiantes, padres/acudientes, cursos, calificaciones, asistencia, justificaciones, convivencia, actas, anuncios y boletines — con tres roles (**administrador**, **estudiante**, **padre**) y seguridad basada en Row Level Security de PostgreSQL.
 
-> **Estado del proyecto:** en desarrollo activo. Este README se actualiza al final de cada fase. Ver [Estado actual](#estado-actual) para el detalle de lo ya implementado.
+> **Estado del proyecto:** funcionalmente completo (Fases 1–6). Solo falta la Fase 7 (publicar en GitHub y desplegar a producción), que requiere una acción tuya. Ver [Estado actual](#estado-actual).
 
 ## Tabla de contenido
 
@@ -47,30 +47,35 @@ No existe rol de docente: no está previsto en el alcance de este proyecto.
 
 ```text
 panel-escolar/
-├── .github/workflows/     # CI (lint + build); despliegue se agrega en fase de deploy
+├── .github/workflows/     # CI (lint + build en cada push)
 ├── public/                 # Estáticos (favicon, etc.)
 ├── src/
 │   ├── components/
-│   │   ├── ui/              # Componentes base reutilizables (Button, Card, Input, ...)
-│   │   └── layout/           # Sidebar, Navbar
+│   │   ├── ui/              # Kit base reutilizable (Button, Card, Modal, Table, Tabs, ...)
+│   │   ├── layout/           # Sidebar, Navbar
+│   │   ├── admin/             # Widgets propios del admin (StudentPicker, AudienceFields, ...)
+│   │   ├── portal/            # Vistas de solo lectura compartidas por ambos portales
+│   │   └── shared/             # Compartido entre admin y portales (ReportCardPreview)
 │   ├── layouts/             # AuthLayout, AdminLayout, PortalLayout
 │   ├── pages/
-│   │   ├── admin/            # Páginas del panel de administración
-│   │   ├── estudiante/       # Páginas del portal del estudiante
-│   │   ├── padre/            # Páginas del portal del padre/acudiente
+│   │   ├── admin/            # 12 módulos de administración
+│   │   ├── estudiante/       # Portal del estudiante (8 páginas)
+│   │   ├── padre/            # Portal del padre/acudiente (8 páginas)
 │   │   └── auth/              # Login, recuperación de contraseña
-│   ├── hooks/                # Hooks reutilizables
+│   ├── hooks/                # Hooks reutilizables (useListQuery, useSimpleQuery, ...)
 │   ├── services/             # Acceso a datos (Supabase) por dominio
 │   ├── lib/                  # Cliente de Supabase
 │   ├── types/                # Tipos TypeScript (incl. tipos generados de la BD)
-│   ├── utils/                # Utilidades puras (validación, formateo, errores)
-│   ├── contexts/             # Contexto de autenticación
-│   ├── routes/                # Definición de rutas y protección por rol
+│   ├── utils/                # Utilidades puras (validación, labels, errores, audiencia)
+│   ├── contexts/             # Auth, Toast, Confirm, hijo activo (portal padre)
+│   ├── routes/                # Definición de rutas, protección por rol, code-splitting
 │   ├── App.tsx
 │   └── main.tsx
 ├── supabase/
-│   ├── migrations/           # Migraciones SQL versionadas
-│   ├── seed.sql               # Datos de prueba para desarrollo
+│   ├── migrations/           # 21 migraciones SQL versionadas
+│   ├── functions/
+│   │   └── create-user/       # Edge Function: crea accesos de estudiante/padre
+│   ├── seed.sql               # Catálogo de asignaturas
 │   └── README.md
 ├── .env.example
 └── README.md
@@ -122,13 +127,21 @@ npm run preview     # sirve el build de producción localmente
 
 ## Migraciones y seed
 
-Las migraciones SQL versionadas viven en `supabase/migrations/` (20 archivos: esquema, RLS, funciones, Storage) y el catálogo de asignaturas en `supabase/seed.sql`. Ver [`supabase/README.md`](supabase/README.md) para el detalle completo.
+Las migraciones SQL versionadas viven en `supabase/migrations/` (21 archivos: esquema, RLS, funciones, Storage, ajustes de seguridad/rendimiento) y el catálogo de asignaturas en `supabase/seed.sql`. Ver [`supabase/README.md`](supabase/README.md) para el detalle completo.
 
 ## Git y GitHub
 
-El proyecto se versiona con Git desde su inicialización, con commits pequeños y descriptivos (`feat:`, `fix:`, `chore:`, ...). Archivos como `.env`, credenciales y claves nunca se incluyen en el repositorio (ver `.gitignore`).
+El proyecto se versiona con Git desde su inicialización, con commits pequeños y descriptivos (`feat:`, `fix:`, `perf:`, `chore:`, ...) — uno por módulo o unidad de trabajo coherente, nunca todo el proyecto junto. Archivos como `.env`, credenciales y claves nunca se incluyen en el repositorio (ver `.gitignore`).
 
-Para conectar el repositorio local con GitHub:
+**El repositorio todavía no está publicado en GitHub** (`gh` está instalado pero no autenticado en este equipo). Para publicarlo:
+
+```bash
+gh auth login
+gh repo create panel-escolar --private --source=. --remote=origin
+git push -u origin main
+```
+
+O, si prefieres crearlo manualmente en github.com:
 
 ```bash
 git remote add origin <url-de-tu-repositorio>
@@ -138,31 +151,22 @@ git push -u origin main
 
 ## Despliegue
 
-Preparado para desplegarse en **Vercel** (recomendado para SPAs de React) o **GitHub Pages**. La configuración de despliegue y los secrets de CI/CD se documentan aquí al completar esa fase del proyecto.
+Preparado para desplegarse en **Vercel** (recomendado para SPAs de React) o **GitHub Pages**. Requiere que el repositorio esté en GitHub primero. Variables de entorno a configurar en el proveedor de hosting: las mismas de [Variables de entorno](#variables-de-entorno) (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — nunca la `service_role key`.
 
 ## Estado actual
 
-**Fase 1 — Inicialización: completada.**
+**Fases 1–6: completadas.** Fase 7 (GitHub + despliegue) pendiente de una acción tuya (ver arriba).
 
-- Proyecto Vite + React + TypeScript + Tailwind CSS v4 configurado.
-- ESLint configurado.
-- Arquitectura de carpetas creada.
-- Sistema de autenticación (contexto, rutas protegidas por sesión y por rol) implementado a nivel de frontend, listo para conectarse a Supabase Auth.
-- Interfaz de login, layout administrativo con sidebar/navbar responsive, y dashboard inicial con estados vacíos.
-- Esqueleto de navegación completo para los tres portales (admin/estudiante/padre) con las secciones que se irán habilitando fase a fase.
-- CI en GitHub Actions (lint + build).
+- **Fase 1 — Inicialización:** Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint, arquitectura de carpetas, CI en GitHub Actions.
+- **Fase 2 — Supabase:** proyecto real (`panel-escolar`, `us-east-1`), 14 tablas normalizadas, RLS verificado con el linter de seguridad de Supabase (sin hallazgos pendientes), 5 buckets de Storage, RPCs de aprobación de justificaciones.
+- **Fase 3 — Autenticación:** login, logout, recuperación de contraseña, contexto de sesión, rutas protegidas por sesión y por rol — verificado contra el proyecto real.
+- **Fase 4 — Administración:** los 12 módulos completos (Institución, Estudiantes, Padres, Cursos, Configuración, Calificaciones, Asistencia, Justificaciones, Convivencia, Actas, Anuncios, Boletines), cada uno con CRUD, búsqueda, paginación y confirmación de acciones destructivas. Incluye la Edge Function `create-user` para que el admin cree accesos de estudiante/padre sin exponer la `service_role key`.
+- **Fase 5 — Portales:** portal del estudiante (8 secciones) y portal del padre (8 secciones, con selector de hijo cuando tiene varios), ambos de solo lectura salvo el envío de justificaciones.
+- **Fase 6 — Calidad:** responsive verificado en escritorio/móvil, estados de carga/vacíos/error en todas las páginas, code-splitting por rol (el bundle inicial bajó de 648 KB a un núcleo de 510 KB + fragmentos por página bajo demanda), revisión final de seguridad y rendimiento sin hallazgos pendientes.
 
-**Fase 2 — Supabase: completada.**
-
-- Proyecto Supabase real creado y conectado (`panel-escolar`, `us-east-1`).
-- 14 tablas con relaciones normalizadas, constraints e índices (ver [`supabase/README.md`](supabase/README.md)).
-- Row Level Security habilitado y verificado en las 14 tablas: admin con acceso total, estudiante limitado a su propia información, padre limitado a sus estudiantes asociados — sin hallazgos pendientes en el linter de seguridad de Supabase.
-- Storage configurado: 5 buckets (institución, anuncios, justificaciones, actas, boletines) con políticas por carpeta.
-- RPCs `approve_justification` / `reject_justification` para aprobar/rechazar justificaciones de forma atómica.
-- Tipos TypeScript (`src/types/database.types.ts`) generados desde el esquema real.
-- Catálogo de asignaturas sembrado vía `supabase/seed.sql`.
-
-**Pendiente** (fases siguientes): lógica completa de autenticación end-to-end (incluye crear el primer administrador — ver `supabase/README.md`), módulos de administración (estudiantes, padres, cursos, calificaciones, asistencia, justificaciones, convivencia, actas, anuncios, boletines), portales de estudiante y padre, y despliegue a producción.
+**Pendiente — requiere que tú:**
+1. Crees tu usuario administrador en el [Dashboard de Supabase](https://supabase.com/dashboard/project/ycajreajzzxsbmeuogux/auth/users) (ver [`supabase/README.md`](supabase/README.md)).
+2. Autentiques `gh` o crees el repositorio en GitHub para publicar el código y desplegar.
 
 ## Solución de problemas
 
