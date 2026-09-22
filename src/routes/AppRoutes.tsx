@@ -8,6 +8,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { CoursesPage } from '@/pages/admin/CoursesPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
+import { StudentsPage } from '@/pages/admin/StudentsPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
@@ -20,6 +21,7 @@ import { RoleRoute } from '@/routes/RoleRoute'
 // falten en este mapa se muestran como "en construcción" hasta su fase.
 const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   institucion: InstitutionPage,
+  estudiantes: StudentsPage,
   cursos: CoursesPage,
 }
 
