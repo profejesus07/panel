@@ -133,29 +133,17 @@ Las migraciones SQL versionadas viven en `supabase/migrations/` (21 archivos: es
 
 El proyecto se versiona con Git desde su inicialización, con commits pequeños y descriptivos (`feat:`, `fix:`, `perf:`, `chore:`, ...) — uno por módulo o unidad de trabajo coherente, nunca todo el proyecto junto. Archivos como `.env`, credenciales y claves nunca se incluyen en el repositorio (ver `.gitignore`).
 
-**El repositorio todavía no está publicado en GitHub** (`gh` está instalado pero no autenticado en este equipo). Para publicarlo:
-
-```bash
-gh auth login
-gh repo create panel-escolar --private --source=. --remote=origin
-git push -u origin main
-```
-
-O, si prefieres crearlo manualmente en github.com:
-
-```bash
-git remote add origin <url-de-tu-repositorio>
-git branch -M main
-git push -u origin main
-```
+**Repositorio:** https://github.com/profejesus07/panel (privado). CI en GitHub Actions (lint + build) corre en cada push a `main`.
 
 ## Despliegue
 
-Preparado para desplegarse en **Vercel** (recomendado para SPAs de React) o **GitHub Pages**. Requiere que el repositorio esté en GitHub primero. Variables de entorno a configurar en el proveedor de hosting: las mismas de [Variables de entorno](#variables-de-entorno) (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — nunca la `service_role key`.
+Se despliega en **Vercel** (recomendado para SPAs de React, y compatible con el repositorio privado sin costo — GitHub Pages gratuito solo funciona con repositorios públicos). Variables de entorno a configurar en el proveedor de hosting: las mismas de [Variables de entorno](#variables-de-entorno) (`VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`) — nunca la `service_role key`.
+
+Para desplegar en Vercel: importa el repositorio desde [vercel.com/new](https://vercel.com/new), configura las dos variables de entorno anteriores, y Vercel detecta automáticamente que es un proyecto Vite (comando de build `npm run build`, carpeta de salida `dist`).
 
 ## Estado actual
 
-**Fases 1–6: completadas.** Fase 7 (GitHub + despliegue) pendiente de una acción tuya (ver arriba).
+**Fases 1–7: completadas.** El proyecto está publicado en GitHub y listo para desplegarse.
 
 - **Fase 1 — Inicialización:** Vite + React 19 + TypeScript + Tailwind CSS v4 + ESLint, arquitectura de carpetas, CI en GitHub Actions.
 - **Fase 2 — Supabase:** proyecto real (`panel-escolar`, `us-east-1`), 14 tablas normalizadas, RLS verificado con el linter de seguridad de Supabase (sin hallazgos pendientes), 5 buckets de Storage, RPCs de aprobación de justificaciones.
@@ -165,8 +153,8 @@ Preparado para desplegarse en **Vercel** (recomendado para SPAs de React) o **Gi
 - **Fase 6 — Calidad:** responsive verificado en escritorio/móvil, estados de carga/vacíos/error en todas las páginas, code-splitting por rol (el bundle inicial bajó de 648 KB a un núcleo de 510 KB + fragmentos por página bajo demanda), revisión final de seguridad y rendimiento sin hallazgos pendientes.
 
 **Pendiente — requiere que tú:**
-1. Crees tu usuario administrador en el [Dashboard de Supabase](https://supabase.com/dashboard/project/ycajreajzzxsbmeuogux/auth/users) (ver [`supabase/README.md`](supabase/README.md)).
-2. Autentiques `gh` o crees el repositorio en GitHub para publicar el código y desplegar.
+1. Crees tu usuario administrador en el [Dashboard de Supabase](https://supabase.com/dashboard/project/ycajreajzzxsbmeuogux/auth/users) (ver [`supabase/README.md`](supabase/README.md)) — es el único paso manual que queda para poder usar la aplicación con datos reales.
+2. Si quieres desplegar a producción, importes el repositorio en Vercel (ver [Despliegue](#despliegue)).
 
 ## Solución de problemas
 
