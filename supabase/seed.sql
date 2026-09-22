@@ -1,0 +1,5 @@
+-- Panel Escolar — datos de prueba (desarrollo/demo)
+--
+-- Este archivo se completa en la Fase 2, una vez existan las migraciones
+-- con el esquema real (school_settings, profiles, students, courses, etc.).
+-- No debe ejecutarse contra un proyecto de producción.
