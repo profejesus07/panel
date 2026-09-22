@@ -9,9 +9,11 @@ Backend de Panel Escolar: base de datos PostgreSQL, autenticación, Row Level Se
 
 ```text
 supabase/
-├── migrations/   # Migraciones SQL versionadas (una por cambio de esquema), 0001 → 0020
-├── seed.sql      # Catálogo de asignaturas (datos de referencia, no personas)
-└── README.md     # Este archivo
+├── migrations/       # Migraciones SQL versionadas (una por cambio de esquema), 0001 → 0020
+├── functions/
+│   └── create-user/  # Edge Function: crea la cuenta de acceso de un estudiante/padre
+├── seed.sql          # Catálogo de asignaturas (datos de referencia, no personas)
+└── README.md         # Este archivo
 ```
 
 Cada cambio de esquema se agrega como un **nuevo** archivo `NNNN_descripcion.sql`; nunca se edita una migración ya aplicada. Así la base de datos siempre se puede reconstruir desde cero de forma reproducible.
@@ -53,6 +55,18 @@ Funciones `SECURITY DEFINER`, de solo lectura, usadas dentro de las políticas R
 - `approve_justification(id, notas)` — solo admin. Aprueba la justificación y refleja automáticamente `justificado` en la asistencia del día correspondiente.
 - `reject_justification(id, notas)` — solo admin. Rechaza la justificación.
 
+### Edge Function `create-user` (`supabase/functions/create-user/`)
+
+Único lugar del sistema donde se usa la `service_role key`, y solo dentro de este entorno de servidor (nunca en el frontend). El admin la invoca desde el botón "Crear acceso" en Estudiantes/Padres para dar de alta la cuenta de acceso de un registro que ya existe como dato:
+
+1. Verifica que quien llama esté autenticado y tenga `role = 'admin'` en `profiles` (si no, responde `success: false` sin tocar `auth.users`).
+2. Crea el usuario en `auth.users` (con `email_confirm: true`, ya que el admin lo está vouching).
+3. Crea su fila en `profiles` con el rol correspondiente.
+4. Vincula `students.user_id` o `guardians.user_id` al nuevo usuario.
+5. Si el paso 3 falla, revierte el usuario creado en el paso 2 (no deja cuentas huérfanas).
+
+Redesplegar tras un cambio: `mcp__supabase__deploy_edge_function` con `project_id = ycajreajzzxsbmeuogux`, `name = create-user`, `verify_jwt = true`.
+
 ## Seguridad (RLS)
 
 Todas las tablas tienen RLS habilitado (`0016_row_level_security.sql`, afinado en `0019`/`0020`). Regla general:
@@ -77,10 +91,12 @@ La seguridad **no depende de React**: aunque el frontend oculte botones, cualqui
 
 ## Creación del administrador inicial
 
-No existe registro público: **todas** las cuentas las crea el administrador (Fase 4, mediante una Edge Function con privilegios de servicio — nunca se expone la `service_role key` en el frontend). Para el primer administrador, que aún no existe:
+No existe registro público: **todas** las cuentas las crea el administrador. Para el primer administrador, que aún no existe (no lo puede crear la Edge Function porque hace falta un admin para invocarla — es el único caso que se hace a mano):
 
 1. En el [Dashboard de Supabase](https://supabase.com/dashboard/project/ycajreajzzxsbmeuogux/auth/users) → **Authentication → Users → Add user**, crea tu usuario con tu correo y una contraseña.
-2. Pide que te asignen el rol `admin` en `profiles` para ese usuario (una sola vez; a partir de ahí ya puedes crear el resto de cuentas desde la aplicación).
+2. Pide que te asignen el rol `admin` en `profiles` para ese usuario (una sola vez).
+
+A partir de ahí, todas las demás cuentas (estudiantes y padres) se crean desde la aplicación: en **Estudiantes** o **Padres y acudientes**, el registro sin acceso muestra la acción "Crear acceso", que invoca la Edge Function `create-user` descrita arriba.
 
 ## Variables de entorno
 

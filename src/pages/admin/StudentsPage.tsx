@@ -1,5 +1,6 @@
-import { Pencil, Plus, Search, Trash2, UserRound } from 'lucide-react'
+import { KeyRound, Pencil, Plus, Search, Trash2, UserRound } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
+import { CreateAccessModal } from '@/components/admin/CreateAccessModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -80,6 +81,7 @@ export function StudentsPage() {
   const [form, setForm] = useState<StudentInput>(EMPTY_FORM)
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof StudentInput, string>>>({})
   const [saving, setSaving] = useState(false)
+  const [accessTarget, setAccessTarget] = useState<StudentWithCourse | null>(null)
 
   const {
     data: students,
@@ -229,17 +231,36 @@ export function StudentsPage() {
       ),
     },
     {
+      key: 'access',
+      header: 'Acceso',
+      render: (s) =>
+        s.user_id ? (
+          <Badge variant="brand">Con acceso</Badge>
+        ) : (
+          <Badge variant="neutral">Sin acceso</Badge>
+        ),
+    },
+    {
       key: 'actions',
       header: '',
       className: 'text-right',
       render: (s) => (
         <RowActions
           actions={[
+            ...(s.user_id
+              ? []
+              : [
+                  {
+                    label: 'Crear acceso',
+                    icon: <KeyRound className="h-4 w-4" />,
+                    onClick: () => setAccessTarget(s),
+                  },
+                ]),
             { label: 'Editar', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(s) },
             {
               label: 'Eliminar',
               icon: <Trash2 className="h-4 w-4" />,
-              variant: 'danger',
+              variant: 'danger' as const,
               onClick: () => void handleDelete(s),
             },
           ]}
@@ -440,6 +461,18 @@ export function StudentsPage() {
           </div>
         </form>
       </Modal>
+
+      {accessTarget && (
+        <CreateAccessModal
+          open
+          onClose={() => setAccessTarget(null)}
+          role="estudiante"
+          linkId={accessTarget.id}
+          defaultFullName={studentFullName(accessTarget)}
+          defaultEmail={accessTarget.email ?? ''}
+          onCreated={reload}
+        />
+      )}
     </div>
   )
 }

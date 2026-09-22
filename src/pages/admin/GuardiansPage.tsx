@@ -1,5 +1,6 @@
-import { Link2, Pencil, Plus, Search, Star, Trash2, UserRound, UsersRound } from 'lucide-react'
+import { KeyRound, Link2, Pencil, Plus, Search, Star, Trash2, UserRound, UsersRound } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
+import { CreateAccessModal } from '@/components/admin/CreateAccessModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -72,6 +73,7 @@ export function GuardiansPage() {
   const [saving, setSaving] = useState(false)
 
   const [linkingGuardian, setLinkingGuardian] = useState<Guardian | null>(null)
+  const [accessTarget, setAccessTarget] = useState<Guardian | null>(null)
 
   const {
     data: guardians,
@@ -178,6 +180,16 @@ export function GuardiansPage() {
     { key: 'phone', header: 'Teléfono', render: (g) => g.phone ?? '—' },
     { key: 'email', header: 'Correo', render: (g) => g.email ?? '—' },
     {
+      key: 'access',
+      header: 'Acceso',
+      render: (g) =>
+        g.user_id ? (
+          <Badge variant="brand">Con acceso</Badge>
+        ) : (
+          <Badge variant="neutral">Sin acceso</Badge>
+        ),
+    },
+    {
       key: 'actions',
       header: '',
       className: 'text-right',
@@ -189,11 +201,20 @@ export function GuardiansPage() {
               icon: <Link2 className="h-4 w-4" />,
               onClick: () => setLinkingGuardian(g),
             },
+            ...(g.user_id
+              ? []
+              : [
+                  {
+                    label: 'Crear acceso',
+                    icon: <KeyRound className="h-4 w-4" />,
+                    onClick: () => setAccessTarget(g),
+                  },
+                ]),
             { label: 'Editar', icon: <Pencil className="h-4 w-4" />, onClick: () => openEdit(g) },
             {
               label: 'Eliminar',
               icon: <Trash2 className="h-4 w-4" />,
-              variant: 'danger',
+              variant: 'danger' as const,
               onClick: () => void handleDelete(g),
             },
           ]}
@@ -309,6 +330,18 @@ export function GuardiansPage() {
 
       {linkingGuardian && (
         <LinkStudentsModal guardian={linkingGuardian} onClose={() => setLinkingGuardian(null)} />
+      )}
+
+      {accessTarget && (
+        <CreateAccessModal
+          open
+          onClose={() => setAccessTarget(null)}
+          role="padre"
+          linkId={accessTarget.id}
+          defaultFullName={guardianFullName(accessTarget)}
+          defaultEmail={accessTarget.email ?? ''}
+          onCreated={reload}
+        />
       )}
     </div>
   )
