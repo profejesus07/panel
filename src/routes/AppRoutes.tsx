@@ -8,6 +8,7 @@ import { NotFoundPage } from '@/pages/NotFoundPage'
 import { ConfigurationPage } from '@/pages/admin/ConfigurationPage'
 import { CoursesPage } from '@/pages/admin/CoursesPage'
 import { DashboardPage } from '@/pages/admin/DashboardPage'
+import { GradesPage } from '@/pages/admin/GradesPage'
 import { GuardiansPage } from '@/pages/admin/GuardiansPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
 import { StudentsPage } from '@/pages/admin/StudentsPage'
@@ -27,6 +28,7 @@ const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   padres: GuardiansPage,
   cursos: CoursesPage,
   configuracion: ConfigurationPage,
+  calificaciones: GradesPage,
 }
 
 export function AppRoutes() {
