@@ -8,7 +8,7 @@ export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-4 print:hidden sm:px-6 lg:px-8">
       <button
         type="button"
         onClick={onOpenMobileMenu}
