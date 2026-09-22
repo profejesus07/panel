@@ -1,6 +1,7 @@
-import { KeyRound, Pencil, Plus, Search, Trash2, UserRound } from 'lucide-react'
+import { FileSpreadsheet, KeyRound, Pencil, Plus, Search, Trash2, UserRound } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { CreateAccessModal } from '@/components/admin/CreateAccessModal'
+import { ExcelImportModal } from '@/components/admin/ExcelImportModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
@@ -25,8 +26,17 @@ import {
   type StudentInput,
   type StudentWithCourse,
 } from '@/services/students.service'
+import {
+  bulkImportStudents,
+  createStudentRowParser,
+  STUDENT_IMPORT_EXAMPLE,
+  STUDENT_IMPORT_HEADERS,
+  STUDENT_IMPORT_INSTRUCTIONS,
+  type StudentImportCredential,
+} from '@/services/studentsImport.service'
 import { Constants } from '@/types/database.types'
 import { DEFAULT_PAGE_SIZE } from '@/types/common'
+import { downloadExcelData } from '@/utils/excel'
 import { DOCUMENT_TYPE_LABELS, STUDENT_STATUS_LABELS } from '@/utils/labels'
 import { isValidEmail } from '@/utils/validation'
 
@@ -82,6 +92,8 @@ export function StudentsPage() {
   const [formErrors, setFormErrors] = useState<Partial<Record<keyof StudentInput, string>>>({})
   const [saving, setSaving] = useState(false)
   const [accessTarget, setAccessTarget] = useState<StudentWithCourse | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importCredentials, setImportCredentials] = useState<StudentImportCredential[]>([])
 
   const {
     data: students,
@@ -276,10 +288,16 @@ export function StudentsPage() {
           <h1 className="text-2xl font-bold text-neutral-900">Estudiantes</h1>
           <p className="text-sm text-neutral-500">Matrícula y datos de los estudiantes.</p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          Nuevo estudiante
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" />
+            Importar Excel
+          </Button>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            Nuevo estudiante
+          </Button>
+        </div>
       </div>
 
       <div className="mb-4 flex flex-col gap-3 sm:flex-row">
@@ -473,6 +491,50 @@ export function StudentsPage() {
           onCreated={reload}
         />
       )}
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => {
+          setImportOpen(false)
+          setImportCredentials([])
+          reload()
+        }}
+        title="Importar estudiantes desde Excel"
+        description="Crea varios estudiantes a la vez a partir de un archivo .xlsx."
+        templateFilename="plantilla-estudiantes.xlsx"
+        templateHeaders={STUDENT_IMPORT_HEADERS}
+        templateExample={STUDENT_IMPORT_EXAMPLE}
+        instructions={STUDENT_IMPORT_INSTRUCTIONS}
+        parseRow={createStudentRowParser(courses)}
+        onImport={(rows) => bulkImportStudents(rows, (cred) => setImportCredentials((prev) => [...prev, cred]))}
+        renderDone={() =>
+          importCredentials.length > 0 && (
+            <div className="rounded-lg border border-brand-200 bg-brand-50 p-4">
+              <p className="mb-2 text-sm font-medium text-brand-800">
+                Se crearon {importCredentials.length} cuenta(s) de acceso. Descarga las credenciales
+                para compartirlas de forma segura con cada familia — no se volverán a mostrar.
+              </p>
+              <Button
+                size="sm"
+                onClick={() =>
+                  downloadExcelData(
+                    'credenciales-estudiantes.xlsx',
+                    ['Nombre', 'Correo', 'Contraseña'],
+                    importCredentials.map((c) => ({
+                      Nombre: c.fullName,
+                      Correo: c.email,
+                      Contraseña: c.password,
+                    })),
+                  )
+                }
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Descargar credenciales
+              </Button>
+            </div>
+          )
+        }
+      />
     </div>
   )
 }

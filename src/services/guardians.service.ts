@@ -37,6 +37,21 @@ export async function listGuardians(
   return { data: data ?? [], count: count ?? 0 }
 }
 
+export async function getGuardianByDocument(
+  documentType: Guardian['document_type'],
+  documentNumber: string,
+): Promise<Guardian | null> {
+  const { data, error } = await supabase
+    .from('guardians')
+    .select('*')
+    .eq('document_type', documentType)
+    .eq('document_number', documentNumber)
+    .maybeSingle()
+
+  if (error) throw new Error(getDataErrorMessage(error))
+  return data
+}
+
 export async function createGuardian(input: GuardianInput): Promise<Guardian> {
   const { data, error } = await supabase.from('guardians').insert(input).select().single()
   if (error) throw new Error(getDataErrorMessage(error))

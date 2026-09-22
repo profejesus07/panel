@@ -1,6 +1,7 @@
-import { FileText, Pencil, Plus, Trash2 } from 'lucide-react'
+import { FileSpreadsheet, FileText, Pencil, Plus, Trash2 } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { StudentPicker } from '@/components/admin/StudentPicker'
+import { ExcelImportModal } from '@/components/admin/ExcelImportModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -23,6 +24,13 @@ import {
   type GradeInput,
   type GradeWithRefs,
 } from '@/services/grades.service'
+import {
+  bulkImportGrades,
+  createGradeRowParser,
+  GRADE_IMPORT_EXAMPLE,
+  GRADE_IMPORT_HEADERS,
+  GRADE_IMPORT_INSTRUCTIONS,
+} from '@/services/gradesImport.service'
 import type { StudentWithCourse } from '@/services/students.service'
 import { Constants } from '@/types/database.types'
 import { GRADE_STATUS_LABELS } from '@/utils/labels'
@@ -63,6 +71,7 @@ export function GradesPage() {
   const [form, setForm] = useState<GradeInput>(emptyForm())
   const [errors, setErrors] = useState<Partial<Record<keyof GradeInput, string>>>({})
   const [saving, setSaving] = useState(false)
+  const [importOpen, setImportOpen] = useState(false)
 
   function reloadGrades() {
     setGradesVersion((v) => v + 1)
@@ -212,11 +221,17 @@ export function GradesPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Calificaciones</h1>
-        <p className="text-sm text-neutral-500">
-          Consulta y registra las calificaciones de un estudiante por asignatura y período.
-        </p>
+      <div className="mb-6 flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+        <div>
+          <h1 className="text-2xl font-bold text-neutral-900">Calificaciones</h1>
+          <p className="text-sm text-neutral-500">
+            Consulta y registra las calificaciones de un estudiante por asignatura y período.
+          </p>
+        </div>
+        <Button variant="outline" onClick={() => setImportOpen(true)}>
+          <FileSpreadsheet className="h-4 w-4" />
+          Importar Excel
+        </Button>
       </div>
 
       <div className="mb-6 max-w-md">
@@ -330,6 +345,22 @@ export function GradesPage() {
           </div>
         </form>
       </Modal>
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => {
+          setImportOpen(false)
+          if (student) reloadGrades()
+        }}
+        title="Importar calificaciones desde Excel"
+        description="Registra calificaciones para varios estudiantes a la vez a partir de un archivo .xlsx."
+        templateFilename="plantilla-calificaciones.xlsx"
+        templateHeaders={GRADE_IMPORT_HEADERS}
+        templateExample={GRADE_IMPORT_EXAMPLE}
+        instructions={GRADE_IMPORT_INSTRUCTIONS}
+        parseRow={createGradeRowParser(subjects, periods)}
+        onImport={bulkImportGrades}
+      />
     </div>
   )
 }

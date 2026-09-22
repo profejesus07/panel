@@ -58,6 +58,17 @@ export async function getStudent(id: string): Promise<StudentWithCourse> {
   return data as StudentWithCourse
 }
 
+export async function getStudentByCode(studentCode: string): Promise<Student | null> {
+  const { data, error } = await supabase
+    .from('students')
+    .select('*')
+    .eq('student_code', studentCode)
+    .maybeSingle()
+
+  if (error) throw new Error(getDataErrorMessage(error))
+  return data
+}
+
 export async function createStudent(input: StudentInput): Promise<Student> {
   const { data, error } = await supabase.from('students').insert(input).select().single()
   if (error) throw new Error(getDataErrorMessage(error))

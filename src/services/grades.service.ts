@@ -39,6 +39,28 @@ export async function createGrade(input: GradeInput): Promise<Grade> {
   return data
 }
 
+// Inserta o, si ya existe una calificación para ese estudiante+asignatura+
+// período (la restricción unique de la tabla), la reemplaza — usado por la
+// importación masiva para que reimportar el mismo archivo corregido no
+// falle por duplicado, sino que actualice el valor.
+export async function upsertGrade(input: GradeInput): Promise<Grade> {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const { data, error } = await supabase
+    .from('grades')
+    .upsert(
+      { ...input, created_by: user?.id ?? null },
+      { onConflict: 'student_id,subject_id,period_id' },
+    )
+    .select()
+    .single()
+
+  if (error) throw new Error(getDataErrorMessage(error))
+  return data
+}
+
 export async function updateGrade(id: string, input: GradeUpdate): Promise<Grade> {
   const { data, error } = await supabase
     .from('grades')

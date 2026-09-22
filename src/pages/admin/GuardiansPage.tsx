@@ -1,6 +1,7 @@
-import { KeyRound, Link2, Pencil, Plus, Search, Star, Trash2, UserRound, UsersRound } from 'lucide-react'
+import { FileSpreadsheet, KeyRound, Link2, Pencil, Plus, Search, Star, Trash2, UserRound, UsersRound } from 'lucide-react'
 import { type FormEvent, useEffect, useState } from 'react'
 import { CreateAccessModal } from '@/components/admin/CreateAccessModal'
+import { ExcelImportModal } from '@/components/admin/ExcelImportModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -23,6 +24,14 @@ import {
   type Guardian,
   type GuardianInput,
 } from '@/services/guardians.service'
+import {
+  bulkImportGuardians,
+  GUARDIAN_IMPORT_EXAMPLE,
+  GUARDIAN_IMPORT_HEADERS,
+  GUARDIAN_IMPORT_INSTRUCTIONS,
+  parseGuardianRow,
+  type GuardianImportCredential,
+} from '@/services/guardiansImport.service'
 import { listStudents, studentFullName, type StudentWithCourse } from '@/services/students.service'
 import {
   createLink,
@@ -33,6 +42,7 @@ import {
 } from '@/services/studentGuardians.service'
 import { Constants } from '@/types/database.types'
 import { DEFAULT_PAGE_SIZE } from '@/types/common'
+import { downloadExcelData } from '@/utils/excel'
 import { DOCUMENT_TYPE_LABELS, GUARDIAN_RELATIONSHIP_LABELS } from '@/utils/labels'
 import { isValidEmail } from '@/utils/validation'
 
@@ -74,6 +84,8 @@ export function GuardiansPage() {
 
   const [linkingGuardian, setLinkingGuardian] = useState<Guardian | null>(null)
   const [accessTarget, setAccessTarget] = useState<Guardian | null>(null)
+  const [importOpen, setImportOpen] = useState(false)
+  const [importCredentials, setImportCredentials] = useState<GuardianImportCredential[]>([])
 
   const {
     data: guardians,
@@ -232,10 +244,16 @@ export function GuardiansPage() {
             Registro de padres, madres, tutores y acudientes, y su vínculo con los estudiantes.
           </p>
         </div>
-        <Button onClick={openCreate}>
-          <Plus className="h-4 w-4" />
-          Nuevo registro
-        </Button>
+        <div className="flex gap-3">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <FileSpreadsheet className="h-4 w-4" />
+            Importar Excel
+          </Button>
+          <Button onClick={openCreate}>
+            <Plus className="h-4 w-4" />
+            Nuevo registro
+          </Button>
+        </div>
       </div>
 
       <div className="relative mb-4">
@@ -343,6 +361,52 @@ export function GuardiansPage() {
           onCreated={reload}
         />
       )}
+
+      <ExcelImportModal
+        open={importOpen}
+        onClose={() => {
+          setImportOpen(false)
+          setImportCredentials([])
+          reload()
+        }}
+        title="Importar padres y acudientes desde Excel"
+        description="Crea o vincula varios padres/acudientes a la vez a partir de un archivo .xlsx."
+        templateFilename="plantilla-padres.xlsx"
+        templateHeaders={GUARDIAN_IMPORT_HEADERS}
+        templateExample={GUARDIAN_IMPORT_EXAMPLE}
+        instructions={GUARDIAN_IMPORT_INSTRUCTIONS}
+        parseRow={parseGuardianRow}
+        onImport={(rows) =>
+          bulkImportGuardians(rows, (cred) => setImportCredentials((prev) => [...prev, cred]))
+        }
+        renderDone={() =>
+          importCredentials.length > 0 && (
+            <div className="rounded-lg border border-brand-200 bg-brand-50 p-4">
+              <p className="mb-2 text-sm font-medium text-brand-800">
+                Se crearon {importCredentials.length} cuenta(s) de acceso. Descarga las credenciales
+                para compartirlas de forma segura — no se volverán a mostrar.
+              </p>
+              <Button
+                size="sm"
+                onClick={() =>
+                  downloadExcelData(
+                    'credenciales-padres.xlsx',
+                    ['Nombre', 'Correo', 'Contraseña'],
+                    importCredentials.map((c) => ({
+                      Nombre: c.fullName,
+                      Correo: c.email,
+                      Contraseña: c.password,
+                    })),
+                  )
+                }
+              >
+                <FileSpreadsheet className="h-4 w-4" />
+                Descargar credenciales
+              </Button>
+            </div>
+          )
+        }
+      />
     </div>
   )
 }
