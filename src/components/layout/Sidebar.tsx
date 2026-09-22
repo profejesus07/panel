@@ -23,21 +23,21 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
 
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-neutral-200 bg-white transition-transform duration-200 print:hidden lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-brand-950 transition-transform duration-200 print:hidden lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
-        <div className="flex h-16 shrink-0 items-center justify-between border-b border-neutral-200 px-5">
+        <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5">
           <div className="flex items-center gap-2">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-700 text-sm font-bold text-white">
               PE
             </div>
-            <span className="text-sm font-bold text-neutral-900">Panel Escolar</span>
+            <span className="text-sm font-bold text-white">Panel Escolar</span>
           </div>
           <button
             type="button"
             onClick={onCloseMobile}
-            className="rounded-md p-1.5 text-neutral-500 hover:bg-neutral-100 lg:hidden"
+            className="rounded-md p-1.5 text-brand-200 hover:bg-white/10 hover:text-white lg:hidden"
             aria-label="Cerrar menú"
           >
             <X className="h-5 w-5" />
@@ -58,8 +58,8 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
                   clsx(
                     'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-brand-50 text-brand-700'
-                      : 'text-neutral-600 hover:bg-neutral-100 hover:text-neutral-900',
+                      ? 'bg-brand-700 text-white shadow-sm'
+                      : 'text-brand-100/80 hover:bg-white/10 hover:text-white',
                   )
                 }
               >
