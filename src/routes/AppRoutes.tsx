@@ -12,6 +12,7 @@ import { DashboardPage } from '@/pages/admin/DashboardPage'
 import { GradesPage } from '@/pages/admin/GradesPage'
 import { GuardiansPage } from '@/pages/admin/GuardiansPage'
 import { InstitutionPage } from '@/pages/admin/InstitutionPage'
+import { JustificationsPage } from '@/pages/admin/JustificationsPage'
 import { StudentsPage } from '@/pages/admin/StudentsPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
@@ -31,6 +32,7 @@ const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   configuracion: ConfigurationPage,
   calificaciones: GradesPage,
   asistencia: AttendancePage,
+  justificaciones: JustificationsPage,
 }
 
 export function AppRoutes() {
