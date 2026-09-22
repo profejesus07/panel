@@ -1,5 +1,19 @@
--- Panel Escolar — datos de prueba (desarrollo/demo)
+-- Panel Escolar — datos de referencia
 --
--- Este archivo se completa en la Fase 2, una vez existan las migraciones
--- con el esquema real (school_settings, profiles, students, courses, etc.).
--- No debe ejecutarse contra un proyecto de producción.
+-- Solo catálogo genérico (asignaturas), no información de personas ni de
+-- la institución: eso lo configura el administrador desde la aplicación
+-- una vez tenga su cuenta (school_settings, cursos, estudiantes, etc.).
+-- Seguro de ejecutar más de una vez gracias a "on conflict do nothing".
+
+insert into public.subjects (name) values
+  ('Matemáticas'),
+  ('Español y Literatura'),
+  ('Ciencias Naturales'),
+  ('Ciencias Sociales'),
+  ('Inglés'),
+  ('Educación Física'),
+  ('Educación Artística'),
+  ('Tecnología e Informática'),
+  ('Ética y Valores'),
+  ('Educación Religiosa')
+on conflict (name) do nothing;

@@ -103,10 +103,13 @@ Sin estas variables, la aplicación compila y se ejecuta igualmente (útil para 
 
 ## Configuración de Supabase
 
-1. Crea un proyecto en [supabase.com](https://supabase.com) (o usa uno existente).
-2. Copia la **Project URL** y la **anon public key** desde *Project Settings → API* hacia tu archivo `.env`.
-3. Aplica las migraciones de `supabase/migrations/` (ver siguiente sección). *(El esquema de base de datos se agrega en la Fase 2 del proyecto.)*
-4. Crea el usuario administrador inicial desde el Dashboard de Supabase (Authentication → Users) y asígnale el rol `admin` en la tabla `profiles` una vez exista.
+El proyecto Supabase de Panel Escolar (`panel-escolar`, región `us-east-1`) ya existe y las 20 migraciones de `supabase/migrations/` ya están aplicadas contra él — no hace falta crear un proyecto nuevo ni volver a aplicarlas para empezar a desarrollar. Ver [`supabase/README.md`](supabase/README.md) para el detalle completo del modelo de datos, RLS y Storage.
+
+Para trabajar localmente:
+
+1. Copia `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY` a tu `.env` (pídeselas a quien tenga acceso al proyecto, o tómalas de *Supabase Dashboard → Project Settings → API*).
+2. Crea tu usuario administrador inicial desde el Dashboard de Supabase (**Authentication → Users → Add user**) — no existe registro público, así que este es el único paso manual. Ver la sección "Creación del administrador inicial" en [`supabase/README.md`](supabase/README.md).
+3. Si necesitas modificar el esquema, agrega una **nueva** migración en `supabase/migrations/` (nunca edites una ya aplicada) y aplícala contra el proyecto.
 
 ## Ejecución local
 
@@ -119,7 +122,7 @@ npm run preview     # sirve el build de producción localmente
 
 ## Migraciones y seed
 
-Las migraciones SQL versionadas viven en `supabase/migrations/` y los datos de prueba en `supabase/seed.sql`. Ver [`supabase/README.md`](supabase/README.md) para más detalle. *(Se completan en la Fase 2.)*
+Las migraciones SQL versionadas viven en `supabase/migrations/` (20 archivos: esquema, RLS, funciones, Storage) y el catálogo de asignaturas en `supabase/seed.sql`. Ver [`supabase/README.md`](supabase/README.md) para el detalle completo.
 
 ## Git y GitHub
 
@@ -149,7 +152,17 @@ Preparado para desplegarse en **Vercel** (recomendado para SPAs de React) o **Gi
 - Esqueleto de navegación completo para los tres portales (admin/estudiante/padre) con las secciones que se irán habilitando fase a fase.
 - CI en GitHub Actions (lint + build).
 
-**Pendiente** (fases siguientes): esquema de base de datos y RLS, lógica completa de autenticación end-to-end, módulos de administración (estudiantes, padres, cursos, calificaciones, asistencia, justificaciones, convivencia, actas, anuncios, boletines), portales de estudiante y padre, y despliegue a producción.
+**Fase 2 — Supabase: completada.**
+
+- Proyecto Supabase real creado y conectado (`panel-escolar`, `us-east-1`).
+- 14 tablas con relaciones normalizadas, constraints e índices (ver [`supabase/README.md`](supabase/README.md)).
+- Row Level Security habilitado y verificado en las 14 tablas: admin con acceso total, estudiante limitado a su propia información, padre limitado a sus estudiantes asociados — sin hallazgos pendientes en el linter de seguridad de Supabase.
+- Storage configurado: 5 buckets (institución, anuncios, justificaciones, actas, boletines) con políticas por carpeta.
+- RPCs `approve_justification` / `reject_justification` para aprobar/rechazar justificaciones de forma atómica.
+- Tipos TypeScript (`src/types/database.types.ts`) generados desde el esquema real.
+- Catálogo de asignaturas sembrado vía `supabase/seed.sql`.
+
+**Pendiente** (fases siguientes): lógica completa de autenticación end-to-end (incluye crear el primer administrador — ver `supabase/README.md`), módulos de administración (estudiantes, padres, cursos, calificaciones, asistencia, justificaciones, convivencia, actas, anuncios, boletines), portales de estudiante y padre, y despliegue a producción.
 
 ## Solución de problemas
 
