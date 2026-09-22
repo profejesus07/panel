@@ -1,5 +1,6 @@
 import type { ComponentType } from 'react'
 import { Route, Routes } from 'react-router-dom'
+import { ActiveChildProvider } from '@/contexts/ActiveChildContext'
 import { AdminLayout } from '@/layouts/AdminLayout'
 import { AuthLayout } from '@/layouts/AuthLayout'
 import { PortalLayout } from '@/layouts/PortalLayout'
@@ -21,10 +22,34 @@ import { StudentsPage } from '@/pages/admin/StudentsPage'
 import { ForgotPasswordPage } from '@/pages/auth/ForgotPasswordPage'
 import { LoginPage } from '@/pages/auth/LoginPage'
 import { ResetPasswordPage } from '@/pages/auth/ResetPasswordPage'
+import * as EstudiantePages from '@/pages/estudiante'
+import * as PadrePages from '@/pages/padre'
 import { ADMIN_NAV_ITEMS, PARENT_NAV_ITEMS, STUDENT_NAV_ITEMS } from '@/routes/navigation'
 import { ProtectedRoute } from '@/routes/ProtectedRoute'
 import { RoleHomeRedirect } from '@/routes/RoleHomeRedirect'
 import { RoleRoute } from '@/routes/RoleRoute'
+
+const STUDENT_PAGES: Partial<Record<string, ComponentType>> = {
+  '': EstudiantePages.HomePage,
+  perfil: EstudiantePages.ProfilePage,
+  calificaciones: EstudiantePages.GradesPage,
+  asistencia: EstudiantePages.AttendancePage,
+  observaciones: EstudiantePages.BehaviorPage,
+  actas: EstudiantePages.OfficialRecordsPage,
+  anuncios: EstudiantePages.AnnouncementsPage,
+  justificaciones: EstudiantePages.JustificationsPage,
+}
+
+const PARENT_PAGES: Partial<Record<string, ComponentType>> = {
+  '': PadrePages.HomePage,
+  hijos: PadrePages.ChildrenPage,
+  calificaciones: PadrePages.GradesPage,
+  asistencia: PadrePages.AttendancePage,
+  observaciones: PadrePages.BehaviorPage,
+  boletines: PadrePages.ReportCardsPage,
+  anuncios: PadrePages.AnnouncementsPage,
+  justificaciones: PadrePages.JustificationsPage,
+}
 
 // Módulos de administración ya implementados, por segmento de ruta. Los que
 // falten en este mapa se muestran como "en construcción" hasta su fase.
@@ -71,27 +96,40 @@ export function AppRoutes() {
 
         <Route element={<RoleRoute allowed={['estudiante']} />}>
           <Route path="/estudiante" element={<PortalLayout />}>
-            {STUDENT_NAV_ITEMS.map((item) => (
-              <Route
-                key={item.segment || 'index'}
-                index={item.segment === ''}
-                path={item.segment || undefined}
-                element={<ComingSoonPage title={item.label} />}
-              />
-            ))}
+            {STUDENT_NAV_ITEMS.map((item) => {
+              const Page = STUDENT_PAGES[item.segment]
+              return (
+                <Route
+                  key={item.segment || 'index'}
+                  index={item.segment === ''}
+                  path={item.segment || undefined}
+                  element={Page ? <Page /> : <ComingSoonPage title={item.label} />}
+                />
+              )
+            })}
           </Route>
         </Route>
 
         <Route element={<RoleRoute allowed={['padre']} />}>
-          <Route path="/padre" element={<PortalLayout />}>
-            {PARENT_NAV_ITEMS.map((item) => (
-              <Route
-                key={item.segment || 'index'}
-                index={item.segment === ''}
-                path={item.segment || undefined}
-                element={<ComingSoonPage title={item.label} />}
-              />
-            ))}
+          <Route
+            path="/padre"
+            element={
+              <ActiveChildProvider>
+                <PortalLayout />
+              </ActiveChildProvider>
+            }
+          >
+            {PARENT_NAV_ITEMS.map((item) => {
+              const Page = PARENT_PAGES[item.segment]
+              return (
+                <Route
+                  key={item.segment || 'index'}
+                  index={item.segment === ''}
+                  path={item.segment || undefined}
+                  element={Page ? <Page /> : <ComingSoonPage title={item.label} />}
+                />
+              )
+            })}
           </Route>
         </Route>
 

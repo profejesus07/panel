@@ -1,0 +1,8 @@
+export { AnnouncementsPage } from './AnnouncementsPage'
+export { AttendancePage } from './AttendancePage'
+export { BehaviorPage } from './BehaviorPage'
+export { ChildrenPage } from './ChildrenPage'
+export { GradesPage } from './GradesPage'
+export { HomePage } from './HomePage'
+export { JustificationsPage } from './JustificationsPage'
+export { ReportCardsPage } from './ReportCardsPage'

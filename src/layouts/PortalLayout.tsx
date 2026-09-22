@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Navbar } from '@/components/layout/Navbar'
 import { Sidebar } from '@/components/layout/Sidebar'
+import { ChildSwitcher } from '@/components/portal/ChildSwitcher'
 import { PARENT_NAV_ITEMS, STUDENT_NAV_ITEMS } from '@/routes/navigation'
 
 export function PortalLayout() {
@@ -21,6 +22,7 @@ export function PortalLayout() {
       />
       <div className="flex min-w-0 flex-1 flex-col lg:pl-64">
         <Navbar onOpenMobileMenu={() => setMobileOpen(true)} />
+        {!isStudent && <ChildSwitcher />}
         <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8">
           <Outlet />
         </main>

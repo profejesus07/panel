@@ -13,6 +13,7 @@ import { useListQuery } from '@/hooks/useListQuery'
 import { useToast } from '@/hooks/useToast'
 import {
   approveJustification,
+  getJustificationAttachmentUrl,
   listJustifications,
   rejectJustification,
   type Justification,
@@ -53,6 +54,15 @@ export function JustificationsPage() {
   function openDetail(j: JustificationWithStudent) {
     setDetail(j)
     setReviewNotes(j.review_notes ?? '')
+  }
+
+  async function handleViewAttachment(path: string) {
+    try {
+      const url = await getJustificationAttachmentUrl(path)
+      window.open(url, '_blank', 'noopener,noreferrer')
+    } catch (error) {
+      showToast('error', error instanceof Error ? error.message : 'No se pudo abrir el archivo.')
+    }
   }
 
   async function handleApprove(j: JustificationWithStudent) {
@@ -206,15 +216,14 @@ export function JustificationsPage() {
             )}
 
             {detail.attachment_url && (
-              <a
-                href={detail.attachment_url}
-                target="_blank"
-                rel="noreferrer"
+              <button
+                type="button"
+                onClick={() => void handleViewAttachment(detail.attachment_url!)}
                 className="inline-flex items-center gap-1.5 text-sm font-medium text-brand-700 hover:text-brand-800"
               >
                 <FileText className="h-4 w-4" />
                 Ver archivo adjunto
-              </a>
+              </button>
             )}
 
             <Textarea

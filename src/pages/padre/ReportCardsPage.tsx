@@ -1,6 +1,6 @@
 import { FileBarChart, Printer } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { StudentPicker } from '@/components/admin/StudentPicker'
+import { ChildGate } from '@/components/portal/ChildGate'
 import { ReportCardPreview } from '@/components/shared/ReportCardPreview'
 import { Button } from '@/components/ui/Button'
 import { EmptyState } from '@/components/ui/EmptyState'
@@ -13,8 +13,19 @@ import { getStudentReport, type StudentReportData } from '@/services/reports.ser
 import type { StudentWithCourse } from '@/services/students.service'
 
 export function ReportCardsPage() {
+  return (
+    <div>
+      <div className="mb-6 print:hidden">
+        <h1 className="text-2xl font-bold text-neutral-900">Boletines</h1>
+        <p className="text-sm text-neutral-500">Boletín académico por período.</p>
+      </div>
+      <ChildGate>{(child) => <ReportCardContent child={child} />}</ChildGate>
+    </div>
+  )
+}
+
+function ReportCardContent({ child }: { child: StudentWithCourse }) {
   const { showToast } = useToast()
-  const [student, setStudent] = useState<StudentWithCourse | null>(null)
   const [periodId, setPeriodId] = useState('')
   const [report, setReport] = useState<StudentReportData | null>(null)
   const [loadedKey, setLoadedKey] = useState<string | null>(null)
@@ -23,16 +34,16 @@ export function ReportCardsPage() {
     showToast('error', 'No se pudieron cargar los períodos académicos.'),
   )
 
-  const currentKey = student && periodId ? `${student.id}:${periodId}` : null
+  const currentKey = periodId ? `${child.id}:${periodId}` : null
   const loading = Boolean(currentKey) && loadedKey !== currentKey
 
   useEffect(() => {
-    if (!currentKey || !student) return
+    if (!currentKey) return
     const period = periods.find((p) => p.id === periodId)
     if (!period) return
 
     let active = true
-    getStudentReport(student.id, period)
+    getStudentReport(child.id, period)
       .then((result) => {
         if (!active) return
         setReport(result)
@@ -52,17 +63,7 @@ export function ReportCardsPage() {
 
   return (
     <div>
-      <div className="mb-6 print:hidden">
-        <h1 className="text-2xl font-bold text-neutral-900">Boletines</h1>
-        <p className="text-sm text-neutral-500">
-          Genera la vista previa del boletín académico de un estudiante por período.
-        </p>
-      </div>
-
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end print:hidden">
-        <div className="max-w-sm flex-1">
-          <StudentPicker value={student} onChange={setStudent} />
-        </div>
         <Select
           label="Período académico"
           value={periodId}
@@ -84,12 +85,8 @@ export function ReportCardsPage() {
         )}
       </div>
 
-      {!student || !periodId ? (
-        <EmptyState
-          icon={FileBarChart}
-          title="Selecciona un estudiante y un período"
-          description="El boletín combina calificaciones, asistencia y convivencia del período elegido."
-        />
+      {!periodId ? (
+        <EmptyState icon={FileBarChart} title="Selecciona un período" />
       ) : loading ? (
         <div className="space-y-3">
           <Skeleton className="h-48 w-full" />
