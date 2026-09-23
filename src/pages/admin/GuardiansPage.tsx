@@ -42,6 +42,7 @@ import {
 } from '@/services/studentGuardians.service'
 import { Constants } from '@/types/database.types'
 import { DEFAULT_PAGE_SIZE } from '@/types/common'
+import { guardianUsername } from '@/utils/authIdentifiers'
 import { downloadExcelData } from '@/utils/excel'
 import { DOCUMENT_TYPE_LABELS, GUARDIAN_RELATIONSHIP_LABELS } from '@/utils/labels'
 import { isValidEmail } from '@/utils/validation'
@@ -357,7 +358,7 @@ export function GuardiansPage() {
           role="padre"
           linkId={accessTarget.id}
           defaultFullName={guardianFullName(accessTarget)}
-          defaultEmail={accessTarget.email ?? ''}
+          username={guardianUsername(accessTarget.document_type, accessTarget.document_number)}
           onCreated={reload}
         />
       )}
@@ -391,10 +392,10 @@ export function GuardiansPage() {
                 onClick={() =>
                   downloadExcelData(
                     'credenciales-padres.xlsx',
-                    ['Nombre', 'Correo', 'Contraseña'],
+                    ['Nombre', 'Usuario', 'Contraseña'],
                     importCredentials.map((c) => ({
                       Nombre: c.fullName,
-                      Correo: c.email,
+                      Usuario: c.username,
                       Contraseña: c.password,
                     })),
                   )

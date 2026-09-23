@@ -35,7 +35,7 @@ function isValidEmail(value: string): boolean {
 }
 
 function translateCreateError(message: string | undefined): string {
-  if (message?.includes('already been registered')) return 'Ya existe una cuenta con ese correo.'
+  if (message?.includes('already been registered')) return 'Ya existe una cuenta con ese usuario.'
   return 'No se pudo crear el usuario. Verifica los datos e inténtalo de nuevo.'
 }
 

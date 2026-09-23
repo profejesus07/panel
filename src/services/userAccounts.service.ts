@@ -1,8 +1,9 @@
 import { supabase } from '@/lib/supabase'
 import type { Enums } from '@/types/database.types'
+import { guardianAuthEmail, studentAuthEmail } from '@/utils/authIdentifiers'
 
 export interface CreateUserAccountParams {
-  email: string
+  username: string
   password: string
   fullName: string
   role: Extract<Enums<'user_role'>, 'estudiante' | 'padre'>
@@ -18,10 +19,17 @@ interface CreateUserResponse {
 // Única forma permitida de crear una cuenta de acceso: nunca se llama a
 // supabase.auth.admin desde el cliente (eso requeriría la service_role key
 // en el navegador). La Edge Function valida que quien llama sea admin.
+//
+// La Edge Function sigue guardando un "email" (es lo único que entiende
+// Supabase Auth), pero acá se calcula a partir del usuario para que
+// estudiantes y padres nunca tengan que dar ni conocer un correo real.
 export async function createUserAccount(params: CreateUserAccountParams): Promise<string> {
+  const email =
+    params.role === 'estudiante' ? studentAuthEmail(params.username) : guardianAuthEmail(params.username)
+
   const { data, error } = await supabase.functions.invoke<CreateUserResponse>('create-user', {
     body: {
-      email: params.email,
+      email,
       password: params.password,
       full_name: params.fullName,
       role: params.role,

@@ -5,7 +5,6 @@ import { Input } from '@/components/ui/Input'
 import { Modal } from '@/components/ui/Modal'
 import { useToast } from '@/hooks/useToast'
 import { createUserAccount, generateTemporaryPassword } from '@/services/userAccounts.service'
-import { isValidEmail } from '@/utils/validation'
 
 interface CreateAccessModalProps {
   open: boolean
@@ -13,7 +12,7 @@ interface CreateAccessModalProps {
   role: 'estudiante' | 'padre'
   linkId: string
   defaultFullName: string
-  defaultEmail: string
+  username: string
   onCreated: () => void
 }
 
@@ -23,20 +22,18 @@ export function CreateAccessModal({
   role,
   linkId,
   defaultFullName,
-  defaultEmail,
+  username,
   onCreated,
 }: CreateAccessModalProps) {
   const { showToast } = useToast()
-  const [email, setEmail] = useState(defaultEmail)
   const [password, setPassword] = useState(() => generateTemporaryPassword())
   const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
+  const [errors, setErrors] = useState<{ password?: string }>({})
   const [saving, setSaving] = useState(false)
   const [created, setCreated] = useState(false)
 
   function validate(): boolean {
     const next: typeof errors = {}
-    if (!email.trim() || !isValidEmail(email)) next.email = 'Ingresa un correo válido.'
     if (password.length < 8) next.password = 'La contraseña debe tener al menos 8 caracteres.'
     setErrors(next)
     return Object.keys(next).length === 0
@@ -49,7 +46,7 @@ export function CreateAccessModal({
     setSaving(true)
     try {
       await createUserAccount({
-        email: email.trim(),
+        username,
         password,
         fullName: defaultFullName,
         role,
@@ -75,7 +72,6 @@ export function CreateAccessModal({
 
   function handleClose() {
     setCreated(false)
-    setEmail(defaultEmail)
     setPassword(generateTemporaryPassword())
     setErrors({})
     onClose()
@@ -89,13 +85,13 @@ export function CreateAccessModal({
             <KeyRound className="h-6 w-6" />
           </div>
           <p className="text-sm text-neutral-600">
-            Comparte estas credenciales con {defaultFullName} de forma segura. Podrá cambiar su
-            contraseña desde "¿Olvidaste tu contraseña?" en el inicio de sesión.
+            Comparte estas credenciales con {defaultFullName} de forma segura. Guárdalas bien: si
+            las olvida, tendrás que generarle una contraseña nueva desde aquí.
           </p>
           <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-left text-sm">
             <p>
-              <span className="text-neutral-500">Correo:</span>{' '}
-              <span className="font-medium text-neutral-900">{email}</span>
+              <span className="text-neutral-500">Usuario:</span>{' '}
+              <span className="font-medium text-neutral-900">{username}</span>
             </p>
             <p className="mt-1 flex items-center gap-2">
               <span className="text-neutral-500">Contraseña:</span>{' '}
@@ -124,13 +120,15 @@ export function CreateAccessModal({
         <p className="text-sm text-neutral-500">
           Se creará una cuenta para <span className="font-medium text-neutral-700">{defaultFullName}</span>.
         </p>
-        <Input
-          label="Correo electrónico"
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={errors.email}
-        />
+        <div>
+          <p className="mb-1.5 text-sm font-medium text-neutral-700">Usuario de acceso</p>
+          <p className="rounded-lg border border-neutral-200 bg-neutral-50 px-3.5 py-2.5 font-mono text-sm text-neutral-700">
+            {username}
+          </p>
+          <p className="mt-1.5 text-xs text-neutral-400">
+            Se calcula solo a partir de {role === 'estudiante' ? 'su código estudiantil' : 'su documento'}, no se puede cambiar aquí.
+          </p>
+        </div>
         <div className="relative">
           <Input
             label="Contraseña inicial"

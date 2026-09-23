@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
 import { useAuth } from '@/hooks/useAuth'
 import { isSupabaseConfigured } from '@/lib/supabase'
-import { isValidEmail } from '@/utils/validation'
 
 interface LocationState {
   from?: { pathname: string }
@@ -16,12 +15,12 @@ export function LoginPage() {
   const navigate = useNavigate()
   const location = useLocation()
 
-  const [email, setEmail] = useState('')
+  const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [formError, setFormError] = useState<string | null>(null)
-  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({})
+  const [fieldErrors, setFieldErrors] = useState<{ identifier?: string; password?: string }>({})
 
   if (!loading && session) {
     const from = (location.state as LocationState | null)?.from?.pathname
@@ -33,15 +32,14 @@ export function LoginPage() {
     setFormError(null)
 
     const errors: typeof fieldErrors = {}
-    if (!email.trim()) errors.email = 'Ingresa tu correo electrónico.'
-    else if (!isValidEmail(email)) errors.email = 'Ingresa un correo válido.'
+    if (!identifier.trim()) errors.identifier = 'Ingresa tu usuario o correo electrónico.'
     if (!password) errors.password = 'Ingresa tu contraseña.'
 
     setFieldErrors(errors)
     if (Object.keys(errors).length > 0) return
 
     setSubmitting(true)
-    const { error } = await signIn(email.trim(), password)
+    const { error } = await signIn(identifier.trim(), password)
     setSubmitting(false)
 
     if (error) {
@@ -79,13 +77,13 @@ export function LoginPage() {
 
       <form onSubmit={handleSubmit} className="space-y-4" noValidate>
         <Input
-          label="Correo electrónico"
-          type="email"
-          autoComplete="email"
-          placeholder="nombre@colegio.edu.co"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          error={fieldErrors.email}
+          label="Usuario o correo electrónico"
+          type="text"
+          autoComplete="username"
+          placeholder="Tu usuario, o tu correo si eres administrador"
+          value={identifier}
+          onChange={(e) => setIdentifier(e.target.value)}
+          error={fieldErrors.identifier}
           disabled={submitting}
         />
 
@@ -124,6 +122,11 @@ export function LoginPage() {
           Iniciar sesión
         </Button>
       </form>
+
+      <p className="mt-5 text-center text-xs text-neutral-400">
+        Estudiantes y acudientes: si olvidaste tu contraseña, pídele a la institución que te genere
+        una nueva. El enlace de recuperación es solo para el correo del administrador.
+      </p>
     </div>
   )
 }

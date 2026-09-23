@@ -3,7 +3,6 @@ import { createStudent, type StudentInput } from '@/services/students.service'
 import { createUserAccount, generateTemporaryPassword } from '@/services/userAccounts.service'
 import type { Course } from '@/services/courses.service'
 import type { Enums } from '@/types/database.types'
-import { isValidEmail } from '@/utils/validation'
 
 export const STUDENT_IMPORT_HEADERS = [
   'Nombres',
@@ -19,7 +18,7 @@ export const STUDENT_IMPORT_HEADERS = [
   'Dirección',
   'Teléfono',
   'Correo',
-  'Correo de acceso',
+  'Crear acceso',
 ]
 
 export const STUDENT_IMPORT_EXAMPLE = [
@@ -37,7 +36,7 @@ export const STUDENT_IMPORT_EXAMPLE = [
     Dirección: 'Calle 10 # 5-20',
     Teléfono: '3001234567',
     Correo: 'juan.perez@correo.com',
-    'Correo de acceso': '',
+    'Crear acceso': 'sí',
   },
 ]
 
@@ -46,7 +45,7 @@ export const STUDENT_IMPORT_INSTRUCTIONS = [
   'Tipo de documento debe ser uno de: RC, TI, CC, CE, PA.',
   'Fecha de nacimiento en formato AAAA-MM-DD (ej. 2012-05-14).',
   'Grado, Grupo y Año lectivo son opcionales, pero si los incluyes deben coincidir exactamente con un curso ya creado en Cursos.',
-  'Si llenas "Correo de acceso", se creará automáticamente una cuenta de acceso para el estudiante con una contraseña generada (se descarga al final de la importación). Déjalo vacío si no quieres crear acceso todavía.',
+  'Si escribes "sí" en "Crear acceso", se creará una cuenta para que el estudiante entre al panel: su usuario será su Código estudiantil, con una contraseña generada (se descarga al final de la importación). Escribe "no" o déjalo vacío si no quieres crear acceso todavía.',
 ]
 
 const VALID_DOCUMENT_TYPES: Enums<'document_type'>[] = ['RC', 'TI', 'CC', 'CE', 'PA']
@@ -54,7 +53,7 @@ const DATE_REGEX = /^\d{4}-\d{2}-\d{2}$/
 
 export interface StudentImportRow {
   input: StudentInput
-  accessEmail: string | null
+  createAccess: boolean
 }
 
 export function createStudentRowParser(courses: Course[]) {
@@ -71,7 +70,7 @@ export function createStudentRowParser(courses: Course[]) {
     const grade = raw['Grado']?.trim()
     const group = raw['Grupo']?.trim()
     const academicYear = raw['Año lectivo']?.trim()
-    const accessEmail = raw['Correo de acceso']?.trim()
+    const createAccessText = raw['Crear acceso']?.trim().toLowerCase()
 
     if (!firstName) return { ok: false, error: 'Falta el nombre.' }
     if (!lastName) return { ok: false, error: 'Falta el apellido.' }
@@ -85,9 +84,6 @@ export function createStudentRowParser(courses: Course[]) {
     if (!studentCode) return { ok: false, error: 'Falta el código estudiantil.' }
     if (gender && !['masculino', 'femenino', 'otro'].includes(gender)) {
       return { ok: false, error: 'Género inválido (usa masculino, femenino u otro, o déjalo vacío).' }
-    }
-    if (accessEmail && !isValidEmail(accessEmail)) {
-      return { ok: false, error: 'El correo de acceso no es válido.' }
     }
 
     let courseId: string | null = null
@@ -129,7 +125,7 @@ export function createStudentRowParser(courses: Course[]) {
           enrollment_date: new Date().toISOString().slice(0, 10),
           notes: null,
         },
-        accessEmail: accessEmail || null,
+        createAccess: createAccessText === 'sí' || createAccessText === 'si',
       },
     }
   }
@@ -137,7 +133,7 @@ export function createStudentRowParser(courses: Course[]) {
 
 export interface StudentImportCredential {
   fullName: string
-  email: string
+  username: string
   password: string
 }
 
@@ -154,11 +150,11 @@ export async function bulkImportStudents(
     try {
       const student = await createStudent(row.input)
 
-      if (row.accessEmail) {
+      if (row.createAccess) {
         const password = generateTemporaryPassword()
         try {
           await createUserAccount({
-            email: row.accessEmail,
+            username: student.student_code,
             password,
             fullName: `${row.input.first_name} ${row.input.last_name}`,
             role: 'estudiante',
@@ -166,7 +162,7 @@ export async function bulkImportStudents(
           })
           onCredential({
             fullName: `${row.input.first_name} ${row.input.last_name}`,
-            email: row.accessEmail,
+            username: student.student_code,
             password,
           })
           results.push({ rowNumber, ok: true, message: 'Estudiante y acceso creados.' })

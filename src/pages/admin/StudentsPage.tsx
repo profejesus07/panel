@@ -487,7 +487,7 @@ export function StudentsPage() {
           role="estudiante"
           linkId={accessTarget.id}
           defaultFullName={studentFullName(accessTarget)}
-          defaultEmail={accessTarget.email ?? ''}
+          username={accessTarget.student_code}
           onCreated={reload}
         />
       )}
@@ -519,10 +519,10 @@ export function StudentsPage() {
                 onClick={() =>
                   downloadExcelData(
                     'credenciales-estudiantes.xlsx',
-                    ['Nombre', 'Correo', 'Contraseña'],
+                    ['Nombre', 'Usuario', 'Contraseña'],
                     importCredentials.map((c) => ({
                       Nombre: c.fullName,
-                      Correo: c.email,
+                      Usuario: c.username,
                       Contraseña: c.password,
                     })),
                   )

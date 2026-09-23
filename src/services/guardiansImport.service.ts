@@ -8,7 +8,7 @@ import { getStudentByCode } from '@/services/students.service'
 import { createLink } from '@/services/studentGuardians.service'
 import { createUserAccount, generateTemporaryPassword } from '@/services/userAccounts.service'
 import { Constants, type Enums } from '@/types/database.types'
-import { isValidEmail } from '@/utils/validation'
+import { guardianUsername } from '@/utils/authIdentifiers'
 
 export const GUARDIAN_IMPORT_HEADERS = [
   'Nombres',
@@ -21,7 +21,7 @@ export const GUARDIAN_IMPORT_HEADERS = [
   'Código del estudiante',
   'Parentesco',
   'Acudiente principal',
-  'Correo de acceso',
+  'Crear acceso',
 ]
 
 export const GUARDIAN_IMPORT_EXAMPLE = [
@@ -36,17 +36,17 @@ export const GUARDIAN_IMPORT_EXAMPLE = [
     'Código del estudiante': 'EST-0001',
     Parentesco: 'madre',
     'Acudiente principal': 'sí',
-    'Correo de acceso': '',
+    'Crear acceso': 'sí',
   },
 ]
 
 export const GUARDIAN_IMPORT_INSTRUCTIONS = [
-  'Todos los campos son obligatorios excepto Teléfono, Correo, Dirección y Correo de acceso.',
+  'Todos los campos son obligatorios excepto Teléfono, Correo y Dirección.',
   'Código del estudiante debe coincidir con un estudiante ya creado (columna "Código estudiantil" en Estudiantes).',
   'Parentesco debe ser uno de: padre, madre, tutor, acudiente, otro.',
   'Acudiente principal: escribe "sí" o "no". Solo puede haber un acudiente principal por estudiante.',
   'Si el mismo padre/madre tiene varios hijos, agrega una fila por cada hijo repitiendo sus datos — el sistema detecta que es la misma persona (por tipo y número de documento) y no la duplica.',
-  'Si llenas "Correo de acceso", se creará una cuenta de acceso (una sola vez por persona, aunque aparezca en varias filas) con una contraseña generada, descargable al final.',
+  'Si escribes "sí" en "Crear acceso" (una sola vez por persona, aunque aparezca en varias filas), se creará una cuenta para que entre al panel: su usuario será su tipo y número de documento juntos, sin espacios (ej. CC43567890), con una contraseña generada, descargable al final.',
 ]
 
 const VALID_DOCUMENT_TYPES: Enums<'document_type'>[] = ['RC', 'TI', 'CC', 'CE', 'PA']
@@ -57,7 +57,7 @@ export interface GuardianImportRow {
   studentId: string
   relationship: Enums<'guardian_relationship'>
   isPrimary: boolean
-  accessEmail: string | null
+  createAccess: boolean
 }
 
 export async function parseGuardianRow(
@@ -70,7 +70,7 @@ export async function parseGuardianRow(
   const studentCode = raw['Código del estudiante']?.trim()
   const relationship = raw['Parentesco']?.trim().toLowerCase()
   const primaryText = raw['Acudiente principal']?.trim().toLowerCase()
-  const accessEmail = raw['Correo de acceso']?.trim()
+  const createAccessText = raw['Crear acceso']?.trim().toLowerCase()
 
   if (!firstName) return { ok: false, error: 'Falta el nombre.' }
   if (!lastName) return { ok: false, error: 'Falta el apellido.' }
@@ -84,9 +84,6 @@ export async function parseGuardianRow(
       ok: false,
       error: 'Parentesco inválido (usa padre, madre, tutor, acudiente u otro).',
     }
-  }
-  if (accessEmail && !isValidEmail(accessEmail)) {
-    return { ok: false, error: 'El correo de acceso no es válido.' }
   }
 
   const student = await getStudentByCode(studentCode)
@@ -109,14 +106,14 @@ export async function parseGuardianRow(
       studentId: student.id,
       relationship: relationship as Enums<'guardian_relationship'>,
       isPrimary: primaryText === 'sí' || primaryText === 'si',
-      accessEmail: accessEmail || null,
+      createAccess: createAccessText === 'sí' || createAccessText === 'si',
     },
   }
 }
 
 export interface GuardianImportCredential {
   fullName: string
-  email: string
+  username: string
   password: string
 }
 
@@ -158,11 +155,12 @@ export async function bulkImportGuardians(
         is_primary: row.isPrimary,
       })
 
-      if (isNewGuardian && row.accessEmail) {
+      if (isNewGuardian && row.createAccess) {
         const password = generateTemporaryPassword()
+        const username = guardianUsername(row.guardianInput.document_type, row.guardianInput.document_number)
         try {
           await createUserAccount({
-            email: row.accessEmail,
+            username,
             password,
             fullName: `${row.guardianInput.first_name} ${row.guardianInput.last_name}`,
             role: 'padre',
@@ -170,7 +168,7 @@ export async function bulkImportGuardians(
           })
           onCredential({
             fullName: `${row.guardianInput.first_name} ${row.guardianInput.last_name}`,
-            email: row.accessEmail,
+            username,
             password,
           })
           results.push({ rowNumber, ok: true, message: 'Acudiente y acceso creados, vínculo creado.' })
