@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Panel Escolar</title>
+    <!-- GitHub Pages sirve este archivo para cualquier ruta que no exista
+         como archivo real (ej. /panel/admin/estudiantes). Como es una SPA,
+         esa ruta sí es válida para React Router — solo que Pages no lo sabe.
+         Guardamos la URL real y redirigimos a index.html, que la restaura
+         con el script en <head>. https://github.com/rafgraph/spa-github-pages -->
+    <script>
+      sessionStorage.redirect = location.href
+    </script>
+    <meta http-equiv="refresh" content="0;URL='/panel/'" />
+  </head>
+  <body></body>
+</html>
