@@ -1,17 +1,60 @@
-import { BookOpen, CalendarCheck, Inbox, Megaphone, UserRound, Users } from 'lucide-react'
+import { BookOpen, CalendarCheck, Inbox, Megaphone, UserRound, Users, type LucideIcon } from 'lucide-react'
 import { Card, CardContent } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
+import { Skeleton } from '@/components/ui/Skeleton'
+import { useSimpleQuery } from '@/hooks/useSimpleQuery'
+import { useToast } from '@/hooks/useToast'
+import {
+  getDashboardStats,
+  listRecentActiveAnnouncements,
+  type DashboardStats,
+  type RecentAnnouncement,
+} from '@/services/dashboard.service'
 
-const stats = [
-  { label: 'Estudiantes', value: 0, icon: Users },
-  { label: 'Padres y acudientes', value: 0, icon: UserRound },
-  { label: 'Cursos activos', value: 0, icon: BookOpen },
-  { label: 'Asistencia de hoy', value: '—', icon: CalendarCheck },
-  { label: 'Justificaciones pendientes', value: 0, icon: Inbox },
-  { label: 'Anuncios activos', value: 0, icon: Megaphone },
-]
+const EMPTY_STATS: DashboardStats = {
+  studentsCount: 0,
+  guardiansCount: 0,
+  activeCoursesCount: 0,
+  pendingJustificationsCount: 0,
+  activeAnnouncementsCount: 0,
+  attendanceToday: null,
+}
+
+function buildStatCards(stats: DashboardStats): { label: string; value: string; icon: LucideIcon }[] {
+  return [
+    { label: 'Estudiantes', value: stats.studentsCount.toLocaleString('es-CO'), icon: Users },
+    { label: 'Padres y acudientes', value: stats.guardiansCount.toLocaleString('es-CO'), icon: UserRound },
+    { label: 'Cursos activos', value: stats.activeCoursesCount.toLocaleString('es-CO'), icon: BookOpen },
+    {
+      label: 'Asistencia de hoy',
+      value: stats.attendanceToday
+        ? `${Math.round((stats.attendanceToday.present / stats.attendanceToday.total) * 100)}%`
+        : 'Sin registrar',
+      icon: CalendarCheck,
+    },
+    {
+      label: 'Justificaciones pendientes',
+      value: stats.pendingJustificationsCount.toLocaleString('es-CO'),
+      icon: Inbox,
+    },
+    { label: 'Anuncios activos', value: stats.activeAnnouncementsCount.toLocaleString('es-CO'), icon: Megaphone },
+  ]
+}
 
 export function DashboardPage() {
+  const { showToast } = useToast()
+
+  const { data: stats, loading: loadingStats } = useSimpleQuery(getDashboardStats, EMPTY_STATS, () =>
+    showToast('error', 'No se pudieron cargar las estadísticas del dashboard.'),
+  )
+  const { data: announcements, loading: loadingAnnouncements } = useSimpleQuery(
+    listRecentActiveAnnouncements,
+    [] as RecentAnnouncement[],
+    () => showToast('error', 'No se pudieron cargar los anuncios activos.'),
+  )
+
+  const statCards = buildStatCards(stats)
+
   return (
     <div>
       <div className="mb-6">
@@ -20,14 +63,18 @@ export function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {stats.map((stat) => (
+        {statCards.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="flex items-center gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
                 <stat.icon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-neutral-900">{stat.value}</p>
+                {loadingStats ? (
+                  <Skeleton className="h-7 w-14" />
+                ) : (
+                  <p className="text-2xl font-bold text-neutral-900">{stat.value}</p>
+                )}
                 <p className="text-sm text-neutral-500">{stat.label}</p>
               </div>
             </CardContent>
@@ -48,10 +95,29 @@ export function DashboardPage() {
         <Card>
           <CardContent>
             <h2 className="mb-4 text-sm font-semibold text-neutral-900">Anuncios activos</h2>
-            <EmptyState
-              title="No hay anuncios activos"
-              description="Los anuncios institucionales publicados aparecerán aquí."
-            />
+            {loadingAnnouncements ? (
+              <div className="space-y-2">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : announcements.length === 0 ? (
+              <EmptyState
+                title="No hay anuncios activos"
+                description="Los anuncios institucionales publicados aparecerán aquí."
+              />
+            ) : (
+              <ul className="divide-y divide-neutral-200">
+                {announcements.map((a) => (
+                  <li key={a.id} className="flex items-center justify-between gap-3 py-2.5 text-sm">
+                    <span className="font-medium text-neutral-800">{a.title}</span>
+                    <span className="shrink-0 text-xs text-neutral-400">
+                      {new Date(a.publish_at).toLocaleDateString('es-CO')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </CardContent>
         </Card>
       </div>
