@@ -40,7 +40,7 @@ function ProfileContent({ student }: { student: StudentWithCourse }) {
                 : 'Sin documento'
             }
           />
-          <Field label="Fecha de nacimiento" value={student.birth_date} />
+          <Field label="Fecha de nacimiento" value={student.birth_date ?? ''} />
           <Field label="Código estudiantil" value={student.student_code} />
           <Field label="Curso" value={student.courses ? courseLabel(student.courses) : 'Sin asignar'} />
           <Field label="Estado" value={STUDENT_STATUS_LABELS[student.status]} />

@@ -701,7 +701,7 @@ export type Database = {
       students: {
         Row: {
           address: string | null
-          birth_date: string
+          birth_date: string | null
           course_id: string | null
           created_at: string
           document_number: string | null
@@ -721,7 +721,7 @@ export type Database = {
         }
         Insert: {
           address?: string | null
-          birth_date: string
+          birth_date?: string | null
           course_id?: string | null
           created_at?: string
           document_number?: string | null
@@ -741,7 +741,7 @@ export type Database = {
         }
         Update: {
           address?: string | null
-          birth_date?: string
+          birth_date?: string | null
           course_id?: string | null
           created_at?: string
           document_number?: string | null

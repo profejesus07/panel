@@ -63,7 +63,7 @@ function toFormState(student: Student): StudentInput {
     last_name: student.last_name,
     document_type: student.document_type,
     document_number: student.document_number ?? '',
-    birth_date: student.birth_date,
+    birth_date: student.birth_date ?? '',
     gender: student.gender,
     address: student.address ?? '',
     phone: student.phone ?? '',
@@ -146,8 +146,7 @@ export function StudentsPage() {
     const errors: Partial<Record<keyof StudentInput, string>> = {}
     if (!form.first_name.trim()) errors.first_name = 'Los nombres son obligatorios.'
     if (!form.last_name.trim()) errors.last_name = 'Los apellidos son obligatorios.'
-    if (!form.birth_date) errors.birth_date = 'La fecha de nacimiento es obligatoria.'
-    else if (new Date(form.birth_date) > new Date()) errors.birth_date = 'La fecha no puede ser futura.'
+    if (form.birth_date && new Date(form.birth_date) > new Date()) errors.birth_date = 'La fecha no puede ser futura.'
     if (!form.student_code.trim()) errors.student_code = 'El código estudiantil es obligatorio.'
     if (!form.enrollment_date) errors.enrollment_date = 'La fecha de ingreso es obligatoria.'
     if (form.email && !isValidEmail(form.email)) errors.email = 'Ingresa un correo válido.'
@@ -163,6 +162,7 @@ export function StudentsPage() {
     const payload: StudentInput = {
       ...form,
       document_number: form.document_number?.trim() || null,
+      birth_date: form.birth_date || null,
       gender: form.gender || null,
       address: form.address || null,
       phone: form.phone || null,
@@ -379,9 +379,9 @@ export function StudentsPage() {
                 error={formErrors.document_number}
               />
               <Input
-                label="Fecha de nacimiento"
+                label="Fecha de nacimiento (opcional)"
                 type="date"
-                value={form.birth_date}
+                value={form.birth_date ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, birth_date: e.target.value }))}
                 error={formErrors.birth_date}
               />
