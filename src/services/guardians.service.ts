@@ -41,12 +41,11 @@ export async function getGuardianByDocument(
   documentType: Guardian['document_type'],
   documentNumber: string,
 ): Promise<Guardian | null> {
-  const { data, error } = await supabase
-    .from('guardians')
-    .select('*')
-    .eq('document_type', documentType)
-    .eq('document_number', documentNumber)
-    .maybeSingle()
+  const query = supabase.from('guardians').select('*').eq('document_number', documentNumber)
+  const { data, error } = await (documentType
+    ? query.eq('document_type', documentType)
+    : query.is('document_type', null)
+  ).maybeSingle()
 
   if (error) throw new Error(getDataErrorMessage(error))
   return data

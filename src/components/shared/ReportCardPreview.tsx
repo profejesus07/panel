@@ -6,7 +6,7 @@ import type { StudentReportData } from '@/services/reports.service'
 import {
   ATTENDANCE_STATUS_LABELS,
   BEHAVIOR_RECORD_TYPE_LABELS,
-  DOCUMENT_TYPE_LABELS,
+  formatDocument,
 } from '@/utils/labels'
 
 // Vista imprimible del boletín, compartida por el panel de administración
@@ -43,9 +43,7 @@ export function ReportCardPreview({ report }: { report: StudentReportData }) {
         <div>
           <p className="text-neutral-500">Documento</p>
           <p className="font-medium text-neutral-900">
-            {student.document_number
-              ? `${DOCUMENT_TYPE_LABELS[student.document_type]} ${student.document_number}`
-              : 'Sin documento'}
+            {formatDocument(student.document_type, student.document_number) ?? 'Sin documento'}
           </p>
         </div>
         <div>

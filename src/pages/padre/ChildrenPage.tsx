@@ -5,7 +5,7 @@ import { FullPageSpinner } from '@/components/ui/Spinner'
 import { useActiveChild } from '@/hooks/useActiveChild'
 import { courseLabel } from '@/services/courses.service'
 import { studentFullName } from '@/services/students.service'
-import { DOCUMENT_TYPE_LABELS, STUDENT_STATUS_LABELS } from '@/utils/labels'
+import { formatDocument, STUDENT_STATUS_LABELS } from '@/utils/labels'
 
 export function ChildrenPage() {
   const { children, activeChild, setActiveChildId, loading } = useActiveChild()
@@ -50,9 +50,7 @@ export function ChildrenPage() {
                       )}
                     </div>
                     <p className="text-sm text-neutral-500">
-                      {child.document_number
-                        ? `${DOCUMENT_TYPE_LABELS[child.document_type]} ${child.document_number}`
-                        : 'Sin documento'}
+                      {formatDocument(child.document_type, child.document_number) ?? 'Sin documento'}
                     </p>
                     <p className="text-sm text-neutral-500">
                       {child.courses ? courseLabel(child.courses) : 'Sin curso asignado'}

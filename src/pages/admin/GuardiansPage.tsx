@@ -44,13 +44,13 @@ import { Constants } from '@/types/database.types'
 import { DEFAULT_PAGE_SIZE } from '@/types/common'
 import { guardianUsername } from '@/utils/authIdentifiers'
 import { downloadExcelData } from '@/utils/excel'
-import { DOCUMENT_TYPE_LABELS, GUARDIAN_RELATIONSHIP_LABELS } from '@/utils/labels'
+import { DOCUMENT_TYPE_LABELS, formatDocument, GUARDIAN_RELATIONSHIP_LABELS } from '@/utils/labels'
 import { isValidEmail } from '@/utils/validation'
 
 const EMPTY_FORM: GuardianInput = {
   first_name: '',
   last_name: '',
-  document_type: 'CC',
+  document_type: null,
   document_number: '',
   phone: '',
   email: '',
@@ -186,9 +186,7 @@ export function GuardiansPage() {
       header: 'Documento',
       render: (g) =>
         g.document_number ? (
-          <span>
-            {DOCUMENT_TYPE_LABELS[g.document_type]} {g.document_number}
-          </span>
+          <span>{formatDocument(g.document_type, g.document_number)}</span>
         ) : (
           <span className="text-neutral-400">Sin documento</span>
         ),
@@ -217,7 +215,7 @@ export function GuardiansPage() {
               icon: <Link2 className="h-4 w-4" />,
               onClick: () => setLinkingGuardian(g),
             },
-            ...(g.user_id || !g.document_number
+            ...(g.user_id || !g.document_type || !g.document_number
               ? []
               : [
                   {
@@ -300,12 +298,13 @@ export function GuardiansPage() {
               error={formErrors.last_name}
             />
             <Select
-              label="Tipo de documento"
-              value={form.document_type}
+              label="Tipo de documento (opcional)"
+              value={form.document_type ?? ''}
               onChange={(e) =>
-                setForm((f) => ({ ...f, document_type: e.target.value as Guardian['document_type'] }))
+                setForm((f) => ({ ...f, document_type: (e.target.value || null) as Guardian['document_type'] }))
               }
             >
+              <option value="">Sin especificar</option>
               {Constants.public.Enums.document_type.map((type) => (
                 <option key={type} value={type}>
                   {DOCUMENT_TYPE_LABELS[type]}
@@ -317,7 +316,7 @@ export function GuardiansPage() {
               value={form.document_number ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, document_number: e.target.value }))}
               error={formErrors.document_number}
-              hint="Se necesita para crear acceso al panel."
+              hint="Junto con el tipo de documento, se necesita para crear acceso al panel."
             />
             <Input
               label="Teléfono"
@@ -355,7 +354,7 @@ export function GuardiansPage() {
         <LinkStudentsModal guardian={linkingGuardian} onClose={() => setLinkingGuardian(null)} />
       )}
 
-      {accessTarget && accessTarget.document_number && (
+      {accessTarget && accessTarget.document_type && accessTarget.document_number && (
         <CreateAccessModal
           open
           onClose={() => setAccessTarget(null)}

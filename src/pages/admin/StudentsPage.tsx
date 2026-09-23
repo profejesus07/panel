@@ -37,13 +37,13 @@ import {
 import { Constants } from '@/types/database.types'
 import { DEFAULT_PAGE_SIZE } from '@/types/common'
 import { downloadExcelData } from '@/utils/excel'
-import { DOCUMENT_TYPE_LABELS, STUDENT_STATUS_LABELS } from '@/utils/labels'
+import { DOCUMENT_TYPE_LABELS, formatDocument, STUDENT_STATUS_LABELS } from '@/utils/labels'
 import { isValidEmail } from '@/utils/validation'
 
 const EMPTY_FORM: StudentInput = {
   first_name: '',
   last_name: '',
-  document_type: 'TI',
+  document_type: null,
   document_number: '',
   birth_date: '',
   gender: null,
@@ -224,9 +224,7 @@ export function StudentsPage() {
       header: 'Documento',
       render: (s) =>
         s.document_number ? (
-          <span>
-            {DOCUMENT_TYPE_LABELS[s.document_type]} {s.document_number}
-          </span>
+          <span>{formatDocument(s.document_type, s.document_number)}</span>
         ) : (
           <span className="text-neutral-400">Sin documento</span>
         ),
@@ -360,12 +358,13 @@ export function StudentsPage() {
                 error={formErrors.last_name}
               />
               <Select
-                label="Tipo de documento"
-                value={form.document_type}
+                label="Tipo de documento (opcional)"
+                value={form.document_type ?? ''}
                 onChange={(e) =>
-                  setForm((f) => ({ ...f, document_type: e.target.value as Student['document_type'] }))
+                  setForm((f) => ({ ...f, document_type: (e.target.value || null) as Student['document_type'] }))
                 }
               >
+                <option value="">Sin especificar</option>
                 {Constants.public.Enums.document_type.map((type) => (
                   <option key={type} value={type}>
                     {DOCUMENT_TYPE_LABELS[type]}

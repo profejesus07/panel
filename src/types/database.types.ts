@@ -430,7 +430,7 @@ export type Database = {
           address: string | null
           created_at: string
           document_number: string | null
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type: Database["public"]["Enums"]["document_type"] | null
           email: string | null
           first_name: string
           id: string
@@ -443,7 +443,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           document_number?: string | null
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type?: Database["public"]["Enums"]["document_type"] | null
           email?: string | null
           first_name: string
           id?: string
@@ -456,7 +456,7 @@ export type Database = {
           address?: string | null
           created_at?: string
           document_number?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"]
+          document_type?: Database["public"]["Enums"]["document_type"] | null
           email?: string | null
           first_name?: string
           id?: string
@@ -705,7 +705,7 @@ export type Database = {
           course_id: string | null
           created_at: string
           document_number: string | null
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type: Database["public"]["Enums"]["document_type"] | null
           email: string | null
           enrollment_date: string
           first_name: string
@@ -725,7 +725,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           document_number?: string | null
-          document_type: Database["public"]["Enums"]["document_type"]
+          document_type?: Database["public"]["Enums"]["document_type"] | null
           email?: string | null
           enrollment_date?: string
           first_name: string
@@ -745,7 +745,7 @@ export type Database = {
           course_id?: string | null
           created_at?: string
           document_number?: string | null
-          document_type?: Database["public"]["Enums"]["document_type"]
+          document_type?: Database["public"]["Enums"]["document_type"] | null
           email?: string | null
           enrollment_date?: string
           first_name?: string

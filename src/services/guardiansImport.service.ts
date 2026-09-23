@@ -41,7 +41,8 @@ export const GUARDIAN_IMPORT_EXAMPLE = [
 ]
 
 export const GUARDIAN_IMPORT_INSTRUCTIONS = [
-  'Todos los campos son obligatorios excepto Teléfono, Correo y Dirección.',
+  'Todos los campos son obligatorios excepto Tipo de documento, Teléfono, Correo y Dirección.',
+  'Tipo de documento, si lo incluyes, debe ser uno de: RC, TI, CC, CE, PA. Es necesario si vas a crear acceso.',
   'Código del estudiante debe coincidir con un estudiante ya creado (columna "Código estudiantil" en Estudiantes).',
   'Parentesco debe ser uno de: padre, madre, tutor, acudiente, otro.',
   'Acudiente principal: escribe "sí" o "no". Solo puede haber un acudiente principal por estudiante.',
@@ -55,8 +56,11 @@ const VALID_RELATIONSHIPS = Constants.public.Enums.guardian_relationship
 export interface GuardianImportRow {
   // El documento sí es obligatorio en la importación masiva (se usa como
   // llave de deduplicación y como usuario de acceso), a diferencia del
-  // formulario manual donde quedó opcional.
-  guardianInput: GuardianInput & { document_number: string }
+  // formulario manual donde quedó opcional. El tipo sí es opcional.
+  guardianInput: GuardianInput & {
+    document_type: Enums<'document_type'> | null
+    document_number: string
+  }
   studentId: string
   relationship: Enums<'guardian_relationship'>
   isPrimary: boolean
@@ -77,10 +81,14 @@ export async function parseGuardianRow(
 
   if (!firstName) return { ok: false, error: 'Falta el nombre.' }
   if (!lastName) return { ok: false, error: 'Falta el apellido.' }
-  if (!VALID_DOCUMENT_TYPES.includes(documentType as Enums<'document_type'>)) {
-    return { ok: false, error: 'Tipo de documento inválido (usa RC, TI, CC, CE o PA).' }
+  if (documentType && !VALID_DOCUMENT_TYPES.includes(documentType as Enums<'document_type'>)) {
+    return { ok: false, error: 'Tipo de documento inválido (usa RC, TI, CC, CE o PA, o déjalo vacío).' }
   }
   if (!documentNumber) return { ok: false, error: 'Falta el número de documento.' }
+  const createAccess = createAccessText === 'sí' || createAccessText === 'si'
+  if (createAccess && !documentType) {
+    return { ok: false, error: 'Para crear acceso se necesita el tipo de documento.' }
+  }
   if (!studentCode) return { ok: false, error: 'Falta el código del estudiante.' }
   if (!VALID_RELATIONSHIPS.includes(relationship as Enums<'guardian_relationship'>)) {
     return {
@@ -100,7 +108,7 @@ export async function parseGuardianRow(
       guardianInput: {
         first_name: firstName,
         last_name: lastName,
-        document_type: documentType as Enums<'document_type'>,
+        document_type: (documentType || null) as Enums<'document_type'> | null,
         document_number: documentNumber,
         phone: raw['Teléfono']?.trim() || null,
         email: raw['Correo']?.trim() || null,
@@ -109,7 +117,7 @@ export async function parseGuardianRow(
       studentId: student.id,
       relationship: relationship as Enums<'guardian_relationship'>,
       isPrimary: primaryText === 'sí' || primaryText === 'si',
-      createAccess: createAccessText === 'sí' || createAccessText === 'si',
+      createAccess,
     },
   }
 }
@@ -158,7 +166,7 @@ export async function bulkImportGuardians(
         is_primary: row.isPrimary,
       })
 
-      if (isNewGuardian && row.createAccess) {
+      if (isNewGuardian && row.createAccess && row.guardianInput.document_type) {
         const password = generateTemporaryPassword()
         const username = guardianUsername(row.guardianInput.document_type, row.guardianInput.document_number)
         try {

@@ -2,7 +2,7 @@ import { StudentGate } from '@/components/portal/StudentGate'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
 import { courseLabel } from '@/services/courses.service'
 import type { StudentWithCourse } from '@/services/students.service'
-import { DOCUMENT_TYPE_LABELS, STUDENT_STATUS_LABELS } from '@/utils/labels'
+import { formatDocument, STUDENT_STATUS_LABELS } from '@/utils/labels'
 
 function Field({ label, value }: { label: string; value: string }) {
   return (
@@ -34,11 +34,7 @@ function ProfileContent({ student }: { student: StudentWithCourse }) {
           <Field label="Apellidos" value={student.last_name} />
           <Field
             label="Documento"
-            value={
-              student.document_number
-                ? `${DOCUMENT_TYPE_LABELS[student.document_type]} ${student.document_number}`
-                : 'Sin documento'
-            }
+            value={formatDocument(student.document_type, student.document_number) ?? 'Sin documento'}
           />
           <Field label="Fecha de nacimiento" value={student.birth_date ?? ''} />
           <Field label="Código estudiantil" value={student.student_code} />

@@ -41,8 +41,8 @@ export const STUDENT_IMPORT_EXAMPLE = [
 ]
 
 export const STUDENT_IMPORT_INSTRUCTIONS = [
-  'Los campos Nombres, Apellidos, Tipo de documento y Código estudiantil son obligatorios. Número de documento es opcional.',
-  'Tipo de documento debe ser uno de: RC, TI, CC, CE, PA.',
+  'Los campos Nombres, Apellidos y Código estudiantil son obligatorios. Tipo y Número de documento son opcionales.',
+  'Tipo de documento, si lo incluyes, debe ser uno de: RC, TI, CC, CE, PA.',
   'Fecha de nacimiento es opcional; si la incluyes, usa el formato AAAA-MM-DD (ej. 2012-05-14).',
   'Grado, Grupo y Año lectivo son opcionales, pero si los incluyes deben coincidir exactamente con un curso ya creado en Cursos.',
   'Si escribes "sí" en "Crear acceso", se creará una cuenta para que el estudiante entre al panel: su usuario será su Código estudiantil, con una contraseña generada (se descarga al final de la importación). Escribe "no" o déjalo vacío si no quieres crear acceso todavía.',
@@ -74,8 +74,8 @@ export function createStudentRowParser(courses: Course[]) {
 
     if (!firstName) return { ok: false, error: 'Falta el nombre.' }
     if (!lastName) return { ok: false, error: 'Falta el apellido.' }
-    if (!VALID_DOCUMENT_TYPES.includes(documentType as Enums<'document_type'>)) {
-      return { ok: false, error: 'Tipo de documento inválido (usa RC, TI, CC, CE o PA).' }
+    if (documentType && !VALID_DOCUMENT_TYPES.includes(documentType as Enums<'document_type'>)) {
+      return { ok: false, error: 'Tipo de documento inválido (usa RC, TI, CC, CE o PA, o déjalo vacío).' }
     }
     if (birthDate && !DATE_REGEX.test(birthDate)) {
       return { ok: false, error: 'Fecha de nacimiento inválida (usa AAAA-MM-DD).' }
@@ -111,7 +111,7 @@ export function createStudentRowParser(courses: Course[]) {
         input: {
           first_name: firstName,
           last_name: lastName,
-          document_type: documentType as Enums<'document_type'>,
+          document_type: (documentType || null) as Enums<'document_type'> | null,
           document_number: documentNumber || null,
           birth_date: birthDate || null,
           gender: gender || null,

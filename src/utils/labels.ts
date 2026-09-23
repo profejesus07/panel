@@ -20,6 +20,15 @@ export const DOCUMENT_TYPE_LABELS: Record<Enums<'document_type'>, string> = {
   PA: 'Pasaporte',
 }
 
+/** Documento para mostrar ("Tarjeta de Identidad 1002345678"); null si no hay número. */
+export function formatDocument(
+  type: Enums<'document_type'> | null,
+  number: string | null,
+): string | null {
+  if (!number) return null
+  return type ? `${DOCUMENT_TYPE_LABELS[type]} ${number}` : number
+}
+
 export const STUDENT_STATUS_LABELS: Record<Enums<'student_status'>, string> = {
   activo: 'Activo',
   inactivo: 'Inactivo',
