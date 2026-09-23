@@ -2,6 +2,8 @@ import { CalendarCheck, FileBarChart, FileText, HeartHandshake } from 'lucide-re
 import { Link } from 'react-router-dom'
 import { ChildGate } from '@/components/portal/ChildGate'
 import { Card, CardContent } from '@/components/ui/Card'
+import { WelcomeBanner } from '@/components/ui/WelcomeBanner'
+import { useAuth } from '@/hooks/useAuth'
 import { courseLabel } from '@/services/courses.service'
 import { studentFullName, type StudentWithCourse } from '@/services/students.service'
 import { STUDENT_STATUS_LABELS } from '@/utils/labels'
@@ -14,21 +16,29 @@ const QUICK_LINKS = [
 ]
 
 export function HomePage() {
-  return <ChildGate>{(child) => <HomeContent child={child} />}</ChildGate>
+  const { profile } = useAuth()
+
+  // El banner va fuera de ChildGate para que se vea aunque todavía no haya
+  // un hijo vinculado a la cuenta.
+  return (
+    <div>
+      <WelcomeBanner
+        title={profile?.fullName.split(' ')[0] ?? ''}
+        description="Acompaña el proceso escolar de tu hijo o hija desde aquí."
+      />
+      <ChildGate>{(child) => <HomeContent child={child} />}</ChildGate>
+    </div>
+  )
 }
 
 function HomeContent({ child }: { child: StudentWithCourse }) {
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Hola</h1>
-        <p className="text-sm text-neutral-500">
-          Información de {studentFullName(child)} —{' '}
-          {child.courses ? courseLabel(child.courses) : 'Sin curso asignado'} ·{' '}
-          {STUDENT_STATUS_LABELS[child.status]}
-        </p>
-      </div>
-
+      <p className="mb-4 text-sm font-medium text-neutral-600">
+        Información de {studentFullName(child)} —{' '}
+        {child.courses ? courseLabel(child.courses) : 'Sin curso asignado'} ·{' '}
+        {STUDENT_STATUS_LABELS[child.status]}
+      </p>
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {QUICK_LINKS.map((link) => (
           <Link key={link.href} to={link.href}>

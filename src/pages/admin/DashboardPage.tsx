@@ -2,6 +2,8 @@ import { BookOpen, CalendarCheck, Inbox, Megaphone, UserRound, Users, type Lucid
 import { Card, CardContent } from '@/components/ui/Card'
 import { EmptyState } from '@/components/ui/EmptyState'
 import { Skeleton } from '@/components/ui/Skeleton'
+import { WelcomeBanner } from '@/components/ui/WelcomeBanner'
+import { useAuth } from '@/hooks/useAuth'
 import { useSimpleQuery } from '@/hooks/useSimpleQuery'
 import { useToast } from '@/hooks/useToast'
 import {
@@ -43,6 +45,7 @@ function buildStatCards(stats: DashboardStats): { label: string; value: string; 
 
 export function DashboardPage() {
   const { showToast } = useToast()
+  const { profile } = useAuth()
 
   const { data: stats, loading: loadingStats } = useSimpleQuery(getDashboardStats, EMPTY_STATS, () =>
     showToast('error', 'No se pudieron cargar las estadísticas del dashboard.'),
@@ -57,10 +60,10 @@ export function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-neutral-900">Dashboard</h1>
-        <p className="text-sm text-neutral-500">Resumen general de la institución.</p>
-      </div>
+      <WelcomeBanner
+        title={profile?.fullName.split(' ')[0] ?? ''}
+        description="Este es el resumen general de la institución. Revisa la asistencia, las justificaciones pendientes y los anuncios activos de hoy."
+      />
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {statCards.map((stat) => (

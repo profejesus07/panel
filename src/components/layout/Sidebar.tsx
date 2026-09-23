@@ -2,6 +2,7 @@ import { clsx } from 'clsx'
 import { X } from 'lucide-react'
 import { NavLink } from 'react-router-dom'
 import type { NavItem } from '@/routes/navigation'
+import { BrandLogo } from './BrandLogo'
 
 interface SidebarProps {
   basePath: string
@@ -28,11 +29,14 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
         )}
       >
         <div className="flex h-16 shrink-0 items-center justify-between border-b border-white/10 px-5">
-          <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-brand-700 text-sm font-bold text-white">
-              PE
+          <div className="flex items-center gap-3">
+            <BrandLogo />
+            <div className="leading-tight">
+              <span className="block text-sm font-bold text-white">Panel Escolar</span>
+              <span className="block text-[11px] font-medium uppercase tracking-wider text-accent-300/80">
+                Gestión docente
+              </span>
             </div>
-            <span className="text-sm font-bold text-white">Panel Escolar</span>
           </div>
           <button
             type="button"
