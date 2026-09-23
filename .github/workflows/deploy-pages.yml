@@ -1,8 +1,10 @@
 name: Deploy a GitHub Pages
 
+# Publicación en GitHub Pages desactivada: el sitio ahora solo se sirve
+# desde Vercel. Se deja el workflow por si se quiere reactivar más adelante
+# (solo hace falta volver a agregar el trigger "push" y habilitar Pages en
+# Settings → Pages del repositorio), pero ya no corre automáticamente.
 on:
-  push:
-    branches: [main]
   workflow_dispatch:
 
 permissions:
