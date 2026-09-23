@@ -3,18 +3,18 @@
 @theme {
   --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, sans-serif;
 
-  /* Vino tinto institucional */
-  --color-brand-50: #fbf1f3;
-  --color-brand-100: #f6e0e6;
-  --color-brand-200: #edc3cd;
-  --color-brand-300: #de9aab;
-  --color-brand-400: #c96a82;
-  --color-brand-500: #ac4661;
-  --color-brand-600: #8f3049;
-  --color-brand-700: #6f2339;
-  --color-brand-800: #571c2e;
-  --color-brand-900: #3f1521;
-  --color-brand-950: #260c14;
+  /* Azul académico institucional */
+  --color-brand-50: #eef3fa;
+  --color-brand-100: #dbe7f5;
+  --color-brand-200: #b8cfeb;
+  --color-brand-300: #8db0da;
+  --color-brand-400: #5c8cc4;
+  --color-brand-500: #3d6ba8;
+  --color-brand-600: #2f5488;
+  --color-brand-700: #26426d;
+  --color-brand-800: #1f3557;
+  --color-brand-900: #182944;
+  --color-brand-950: #0e1a2e;
 
   /* Gris neutro institucional */
   --color-neutral-50: #f8fafc;
@@ -60,7 +60,7 @@
   /* Elevación: sombras suaves y por capas para una sensación más premium */
   --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.05);
   --shadow-elevated: 0 4px 10px -2px rgb(15 23 42 / 0.06), 0 16px 32px -12px rgb(15 23 42 / 0.14);
-  --shadow-brand: 0 8px 20px -6px rgb(172 70 97 / 0.35);
+  --shadow-brand: 0 8px 20px -6px rgb(61 107 168 / 0.35);
 }
 
 @layer base {
