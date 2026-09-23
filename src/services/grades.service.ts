@@ -24,6 +24,27 @@ export async function listGradesForStudent(studentId: string): Promise<GradeWith
   return (data ?? []) as GradeWithRefs[]
 }
 
+// Calificaciones consolidadas de varios estudiantes (un curso) para una
+// asignatura y un período. Incluye las importadas desde Excel, que no
+// tienen notas parciales detrás.
+export async function listGradesForGroup(
+  studentIds: string[],
+  subjectId: string,
+  periodId: string,
+): Promise<Grade[]> {
+  if (studentIds.length === 0) return []
+
+  const { data, error } = await supabase
+    .from('grades')
+    .select('*')
+    .in('student_id', studentIds)
+    .eq('subject_id', subjectId)
+    .eq('period_id', periodId)
+
+  if (error) throw new Error(getDataErrorMessage(error))
+  return data ?? []
+}
+
 export async function createGrade(input: GradeInput): Promise<Grade> {
   const {
     data: { user },

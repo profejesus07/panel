@@ -291,6 +291,73 @@ export type Database = {
         }
         Relationships: []
       }
+      grade_entries: {
+        Row: {
+          concept: string
+          created_at: string
+          created_by: string | null
+          graded_at: string
+          id: string
+          observation: string | null
+          period_id: string
+          score: number
+          student_id: string
+          subject_id: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          concept: string
+          created_at?: string
+          created_by?: string | null
+          graded_at?: string
+          id?: string
+          observation?: string | null
+          period_id: string
+          score: number
+          student_id: string
+          subject_id: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          concept?: string
+          created_at?: string
+          created_by?: string | null
+          graded_at?: string
+          id?: string
+          observation?: string | null
+          period_id?: string
+          score?: number
+          student_id?: string
+          subject_id?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grade_entries_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_entries_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grade_entries_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       grades: {
         Row: {
           created_at: string
