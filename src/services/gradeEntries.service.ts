@@ -32,6 +32,19 @@ export async function listGradeEntries(filters: GradeEntryFilters): Promise<Grad
   return data ?? []
 }
 
+// Todas las notas parciales de un estudiante (portales de estudiante y padre).
+export async function listGradeEntriesForStudent(studentId: string): Promise<GradeEntry[]> {
+  const { data, error } = await supabase
+    .from('grade_entries')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('graded_at')
+    .order('created_at')
+
+  if (error) throw new Error(getDataErrorMessage(error))
+  return data ?? []
+}
+
 export async function createGradeEntry(input: GradeEntryInput): Promise<GradeEntry> {
   const {
     data: { user },
