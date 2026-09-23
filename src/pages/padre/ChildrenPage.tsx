@@ -50,7 +50,9 @@ export function ChildrenPage() {
                       )}
                     </div>
                     <p className="text-sm text-neutral-500">
-                      {DOCUMENT_TYPE_LABELS[child.document_type]} {child.document_number}
+                      {child.document_number
+                        ? `${DOCUMENT_TYPE_LABELS[child.document_type]} ${child.document_number}`
+                        : 'Sin documento'}
                     </p>
                     <p className="text-sm text-neutral-500">
                       {child.courses ? courseLabel(child.courses) : 'Sin curso asignado'}

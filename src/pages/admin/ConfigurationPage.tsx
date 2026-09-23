@@ -1,4 +1,4 @@
-import { BookOpen, CalendarRange, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { BookOpen, CalendarRange, Gauge, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -23,6 +23,13 @@ import {
   type AcademicPeriodInput,
   type Subject,
 } from '@/services/academicCatalog.service'
+import {
+  listPerformanceLevels,
+  performanceLevelColor,
+  updatePerformanceLevels,
+  type PerformanceLevel,
+  type PerformanceLevelUpdate,
+} from '@/services/performanceLevels.service'
 import { Constants } from '@/types/database.types'
 import { COURSE_STATUS_LABELS } from '@/utils/labels'
 
@@ -37,6 +44,10 @@ export function ConfigurationPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <SubjectsCard />
         <AcademicPeriodsCard />
+      </div>
+
+      <div className="mt-6">
+        <PerformanceLevelsCard />
       </div>
     </div>
   )
@@ -365,5 +376,176 @@ function AcademicPeriodsCard() {
         </form>
       </Modal>
     </Card>
+  )
+}
+
+function PerformanceLevelsCard() {
+  const { showToast } = useToast()
+  const {
+    data: levels,
+    loading,
+    reload,
+  } = useSimpleQuery(listPerformanceLevels, [] as PerformanceLevel[], () =>
+    showToast('error', 'No se pudieron cargar los desempeños.'),
+  )
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between">
+        <CardTitle className="flex items-center gap-2">
+          <Gauge className="h-4 w-4 text-brand-700" />
+          Escala de valoración
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="mb-4 text-sm text-neutral-500">
+          Define el nombre y el rango de puntaje de cada desempeño. Se usan para clasificar
+          calificaciones en Calificaciones y en Estadísticas.
+        </p>
+
+        {loading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <Skeleton key={i} className="h-14 w-full" />
+            ))}
+          </div>
+        ) : (
+          // key fuerza reiniciar el formulario cuando llegan datos nuevos del
+          // servidor (carga inicial o tras guardar), sin depender de un
+          // efecto que sincronice el estado local con las props.
+          <PerformanceLevelsForm
+            key={levels.map((l) => `${l.id}:${l.updated_at}`).join('|')}
+            levels={levels}
+            onSaved={() => {
+              showToast('success', 'Escala de valoración actualizada correctamente.')
+              reload()
+            }}
+            onError={(message) => showToast('error', message)}
+          />
+        )}
+      </CardContent>
+    </Card>
+  )
+}
+
+function PerformanceLevelsForm({
+  levels,
+  onSaved,
+  onError,
+}: {
+  levels: PerformanceLevel[]
+  onSaved: () => void
+  onError: (message: string) => void
+}) {
+  const [rows, setRows] = useState<PerformanceLevelUpdate[]>(() =>
+    levels.map((l) => ({ id: l.id, name: l.name, min_score: l.min_score, max_score: l.max_score })),
+  )
+  const [errors, setErrors] = useState<Record<string, string>>({})
+  const [saving, setSaving] = useState(false)
+
+  function updateRow(id: string, patch: Partial<Omit<PerformanceLevelUpdate, 'id'>>) {
+    setRows((prev) => prev.map((r) => (r.id === id ? { ...r, ...patch } : r)))
+  }
+
+  function resetToDefaults() {
+    const defaults: Record<string, { name: string; min_score: number; max_score: number }> = {
+      bajo: { name: 'Bajo', min_score: 0, max_score: 6.9 },
+      basico: { name: 'Básico', min_score: 7, max_score: 7.9 },
+      alto: { name: 'Alto', min_score: 8, max_score: 8.9 },
+      superior: { name: 'Superior', min_score: 9, max_score: 10 },
+    }
+    setRows((prev) =>
+      prev.map((r) => {
+        const level = levels.find((l) => l.id === r.id)
+        const fallback = level ? defaults[level.slug] : undefined
+        return fallback ? { ...r, ...fallback } : r
+      }),
+    )
+    setErrors({})
+  }
+
+  function validate(): boolean {
+    const next: Record<string, string> = {}
+    for (const row of rows) {
+      if (!row.name.trim()) next[row.id] = 'El nombre es obligatorio.'
+      else if (row.min_score > row.max_score) next[row.id] = 'El mínimo no puede ser mayor al máximo.'
+    }
+    setErrors(next)
+    return Object.keys(next).length === 0
+  }
+
+  async function handleSave() {
+    if (!validate()) return
+
+    setSaving(true)
+    try {
+      await updatePerformanceLevels(rows)
+      onSaved()
+    } catch (error) {
+      onError(error instanceof Error ? error.message : 'No se pudo guardar la escala.')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  return (
+    <div>
+      <div className="mb-3 flex justify-end">
+        <Button size="sm" variant="outline" onClick={resetToDefaults}>
+          <RotateCcw className="h-4 w-4" />
+          Restablecer valores por defecto
+        </Button>
+      </div>
+
+      <div className="space-y-3">
+        {levels.map((level) => {
+          const row = rows.find((r) => r.id === level.id)
+          if (!row) return null
+          const color = performanceLevelColor(level.slug)
+
+          return (
+            <div
+              key={level.id}
+              className="grid grid-cols-1 items-start gap-3 rounded-lg border border-neutral-200 p-3.5 sm:grid-cols-[auto_1fr_auto_auto]"
+            >
+              <div className="flex items-center gap-2 pt-2.5 sm:pt-0">
+                <span className={`h-3 w-3 shrink-0 rounded-full ${color.dot}`} aria-hidden />
+                <span className="text-xs font-medium uppercase tracking-wide text-neutral-400">
+                  {level.slug}
+                </span>
+              </div>
+              <Input
+                label="Nombre"
+                value={row.name}
+                onChange={(e) => updateRow(level.id, { name: e.target.value })}
+                error={errors[level.id]}
+              />
+              <Input
+                label="Mínimo"
+                type="number"
+                step="0.1"
+                className="sm:w-24"
+                value={row.min_score}
+                onChange={(e) => updateRow(level.id, { min_score: Number(e.target.value) })}
+              />
+              <Input
+                label="Máximo"
+                type="number"
+                step="0.1"
+                className="sm:w-24"
+                value={row.max_score}
+                onChange={(e) => updateRow(level.id, { max_score: Number(e.target.value) })}
+              />
+            </div>
+          )
+        })}
+      </div>
+
+      <div className="mt-4 flex justify-end border-t border-neutral-200 pt-4">
+        <Button onClick={() => void handleSave()} loading={saving}>
+          Guardar escala
+        </Button>
+      </div>
+    </div>
   )
 }

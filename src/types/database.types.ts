@@ -362,7 +362,7 @@ export type Database = {
         Row: {
           address: string | null
           created_at: string
-          document_number: string
+          document_number: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           email: string | null
           first_name: string
@@ -375,7 +375,7 @@ export type Database = {
         Insert: {
           address?: string | null
           created_at?: string
-          document_number: string
+          document_number?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           email?: string | null
           first_name: string
@@ -388,7 +388,7 @@ export type Database = {
         Update: {
           address?: string | null
           created_at?: string
-          document_number?: string
+          document_number?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           email?: string | null
           first_name?: string
@@ -465,6 +465,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      performance_levels: {
+        Row: {
+          created_at: string
+          id: string
+          max_score: number
+          min_score: number
+          name: string
+          slug: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          max_score: number
+          min_score: number
+          name: string
+          slug: string
+          sort_order: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          max_score?: number
+          min_score?: number
+          name?: string
+          slug?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
@@ -604,7 +637,7 @@ export type Database = {
           birth_date: string
           course_id: string | null
           created_at: string
-          document_number: string
+          document_number: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           email: string | null
           enrollment_date: string
@@ -624,7 +657,7 @@ export type Database = {
           birth_date: string
           course_id?: string | null
           created_at?: string
-          document_number: string
+          document_number?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           email?: string | null
           enrollment_date?: string
@@ -644,7 +677,7 @@ export type Database = {
           birth_date?: string
           course_id?: string | null
           created_at?: string
-          document_number?: string
+          document_number?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           email?: string | null
           enrollment_date?: string

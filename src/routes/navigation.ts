@@ -1,4 +1,5 @@
 import {
+  BarChart3,
   Bell,
   Building2,
   CalendarCheck,
@@ -30,6 +31,7 @@ export const ADMIN_NAV_ITEMS: NavItem[] = [
   { label: 'Padres y acudientes', segment: 'padres', icon: UsersRound },
   { label: 'Cursos', segment: 'cursos', icon: GraduationCap },
   { label: 'Calificaciones', segment: 'calificaciones', icon: FileText },
+  { label: 'Estadísticas', segment: 'estadisticas', icon: BarChart3 },
   { label: 'Asistencia', segment: 'asistencia', icon: CalendarCheck },
   { label: 'Justificaciones', segment: 'justificaciones', icon: FileCheck2 },
   { label: 'Convivencia', segment: 'convivencia', icon: HeartHandshake },

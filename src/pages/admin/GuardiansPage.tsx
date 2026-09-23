@@ -62,7 +62,7 @@ function toFormState(guardian: Guardian): GuardianInput {
     first_name: guardian.first_name,
     last_name: guardian.last_name,
     document_type: guardian.document_type,
-    document_number: guardian.document_number,
+    document_number: guardian.document_number ?? '',
     phone: guardian.phone ?? '',
     email: guardian.email ?? '',
     address: guardian.address ?? '',
@@ -122,7 +122,6 @@ export function GuardiansPage() {
     const errors: Partial<Record<keyof GuardianInput, string>> = {}
     if (!form.first_name.trim()) errors.first_name = 'Los nombres son obligatorios.'
     if (!form.last_name.trim()) errors.last_name = 'Los apellidos son obligatorios.'
-    if (!form.document_number.trim()) errors.document_number = 'El número de documento es obligatorio.'
     if (form.email && !isValidEmail(form.email)) errors.email = 'Ingresa un correo válido.'
     setFormErrors(errors)
     return Object.keys(errors).length === 0
@@ -134,6 +133,7 @@ export function GuardiansPage() {
 
     const payload: GuardianInput = {
       ...form,
+      document_number: form.document_number?.trim() || null,
       phone: form.phone || null,
       email: form.email || null,
       address: form.address || null,
@@ -184,11 +184,14 @@ export function GuardiansPage() {
     {
       key: 'document',
       header: 'Documento',
-      render: (g) => (
-        <span>
-          {DOCUMENT_TYPE_LABELS[g.document_type]} {g.document_number}
-        </span>
-      ),
+      render: (g) =>
+        g.document_number ? (
+          <span>
+            {DOCUMENT_TYPE_LABELS[g.document_type]} {g.document_number}
+          </span>
+        ) : (
+          <span className="text-neutral-400">Sin documento</span>
+        ),
     },
     { key: 'phone', header: 'Teléfono', render: (g) => g.phone ?? '—' },
     { key: 'email', header: 'Correo', render: (g) => g.email ?? '—' },
@@ -214,7 +217,7 @@ export function GuardiansPage() {
               icon: <Link2 className="h-4 w-4" />,
               onClick: () => setLinkingGuardian(g),
             },
-            ...(g.user_id
+            ...(g.user_id || !g.document_number
               ? []
               : [
                   {
@@ -310,10 +313,11 @@ export function GuardiansPage() {
               ))}
             </Select>
             <Input
-              label="Número de documento"
-              value={form.document_number}
+              label="Número de documento (opcional)"
+              value={form.document_number ?? ''}
               onChange={(e) => setForm((f) => ({ ...f, document_number: e.target.value }))}
               error={formErrors.document_number}
+              hint="Se necesita para crear acceso al panel."
             />
             <Input
               label="Teléfono"
@@ -351,7 +355,7 @@ export function GuardiansPage() {
         <LinkStudentsModal guardian={linkingGuardian} onClose={() => setLinkingGuardian(null)} />
       )}
 
-      {accessTarget && (
+      {accessTarget && accessTarget.document_number && (
         <CreateAccessModal
           open
           onClose={() => setAccessTarget(null)}

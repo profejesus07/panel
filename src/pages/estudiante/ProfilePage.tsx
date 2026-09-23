@@ -34,7 +34,11 @@ function ProfileContent({ student }: { student: StudentWithCourse }) {
           <Field label="Apellidos" value={student.last_name} />
           <Field
             label="Documento"
-            value={`${DOCUMENT_TYPE_LABELS[student.document_type]} ${student.document_number}`}
+            value={
+              student.document_number
+                ? `${DOCUMENT_TYPE_LABELS[student.document_type]} ${student.document_number}`
+                : 'Sin documento'
+            }
           />
           <Field label="Fecha de nacimiento" value={student.birth_date} />
           <Field label="Código estudiantil" value={student.student_code} />

@@ -43,7 +43,9 @@ export function ReportCardPreview({ report }: { report: StudentReportData }) {
         <div>
           <p className="text-neutral-500">Documento</p>
           <p className="font-medium text-neutral-900">
-            {DOCUMENT_TYPE_LABELS[student.document_type]} {student.document_number}
+            {student.document_number
+              ? `${DOCUMENT_TYPE_LABELS[student.document_type]} ${student.document_number}`
+              : 'Sin documento'}
           </p>
         </div>
         <div>

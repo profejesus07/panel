@@ -77,3 +77,36 @@ export async function deleteGrade(id: string): Promise<void> {
   const { error } = await supabase.from('grades').delete().eq('id', id)
   if (error) throw new Error(getDataErrorMessage(error))
 }
+
+export interface GradeStatRow {
+  score: number
+  status: Grade['status']
+  subject_id: string
+  period_id: string
+  subjects: Pick<Tables<'subjects'>, 'id' | 'name'> | null
+  academic_periods: Pick<Tables<'academic_periods'>, 'id' | 'name' | 'academic_year'> | null
+}
+
+export interface GradeStatsFilters {
+  courseId?: string
+  subjectId?: string
+  periodId?: string
+}
+
+const GRADE_STATS_SELECT =
+  'score, status, subject_id, period_id, subjects(id, name), academic_periods(id, name, academic_year), students!inner(id, course_id)'
+
+// Trae las calificaciones de todos los estudiantes (no solo uno) para
+// alimentar la pestaña de Estadísticas. El join a students es !inner para
+// poder filtrar por curso a través de una relación anidada en PostgREST.
+export async function listGradesForStats(filters: GradeStatsFilters = {}): Promise<GradeStatRow[]> {
+  let query = supabase.from('grades').select(GRADE_STATS_SELECT)
+
+  if (filters.subjectId) query = query.eq('subject_id', filters.subjectId)
+  if (filters.periodId) query = query.eq('period_id', filters.periodId)
+  if (filters.courseId) query = query.eq('students.course_id', filters.courseId)
+
+  const { data, error } = await query
+  if (error) throw new Error(getDataErrorMessage(error))
+  return (data ?? []) as unknown as GradeStatRow[]
+}

@@ -53,7 +53,10 @@ const VALID_DOCUMENT_TYPES: Enums<'document_type'>[] = ['RC', 'TI', 'CC', 'CE', 
 const VALID_RELATIONSHIPS = Constants.public.Enums.guardian_relationship
 
 export interface GuardianImportRow {
-  guardianInput: GuardianInput
+  // El documento sí es obligatorio en la importación masiva (se usa como
+  // llave de deduplicación y como usuario de acceso), a diferencia del
+  // formulario manual donde quedó opcional.
+  guardianInput: GuardianInput & { document_number: string }
   studentId: string
   relationship: Enums<'guardian_relationship'>
   isPrimary: boolean

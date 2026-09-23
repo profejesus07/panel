@@ -62,7 +62,7 @@ function toFormState(student: Student): StudentInput {
     first_name: student.first_name,
     last_name: student.last_name,
     document_type: student.document_type,
-    document_number: student.document_number,
+    document_number: student.document_number ?? '',
     birth_date: student.birth_date,
     gender: student.gender,
     address: student.address ?? '',
@@ -146,7 +146,6 @@ export function StudentsPage() {
     const errors: Partial<Record<keyof StudentInput, string>> = {}
     if (!form.first_name.trim()) errors.first_name = 'Los nombres son obligatorios.'
     if (!form.last_name.trim()) errors.last_name = 'Los apellidos son obligatorios.'
-    if (!form.document_number.trim()) errors.document_number = 'El número de documento es obligatorio.'
     if (!form.birth_date) errors.birth_date = 'La fecha de nacimiento es obligatoria.'
     else if (new Date(form.birth_date) > new Date()) errors.birth_date = 'La fecha no puede ser futura.'
     if (!form.student_code.trim()) errors.student_code = 'El código estudiantil es obligatorio.'
@@ -163,6 +162,7 @@ export function StudentsPage() {
 
     const payload: StudentInput = {
       ...form,
+      document_number: form.document_number?.trim() || null,
       gender: form.gender || null,
       address: form.address || null,
       phone: form.phone || null,
@@ -222,11 +222,14 @@ export function StudentsPage() {
     {
       key: 'document',
       header: 'Documento',
-      render: (s) => (
-        <span>
-          {DOCUMENT_TYPE_LABELS[s.document_type]} {s.document_number}
-        </span>
-      ),
+      render: (s) =>
+        s.document_number ? (
+          <span>
+            {DOCUMENT_TYPE_LABELS[s.document_type]} {s.document_number}
+          </span>
+        ) : (
+          <span className="text-neutral-400">Sin documento</span>
+        ),
     },
     {
       key: 'course',
@@ -370,8 +373,8 @@ export function StudentsPage() {
                 ))}
               </Select>
               <Input
-                label="Número de documento"
-                value={form.document_number}
+                label="Número de documento (opcional)"
+                value={form.document_number ?? ''}
                 onChange={(e) => setForm((f) => ({ ...f, document_number: e.target.value }))}
                 error={formErrors.document_number}
               />

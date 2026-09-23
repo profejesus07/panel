@@ -26,6 +26,7 @@ const GuardiansPage = lazy(() => import('@/pages/admin/GuardiansPage').then((m) 
 const CoursesPage = lazy(() => import('@/pages/admin/CoursesPage').then((m) => ({ default: m.CoursesPage })))
 const ConfigurationPage = lazy(() => import('@/pages/admin/ConfigurationPage').then((m) => ({ default: m.ConfigurationPage })))
 const AdminGradesPage = lazy(() => import('@/pages/admin/GradesPage').then((m) => ({ default: m.GradesPage })))
+const AdminStatisticsPage = lazy(() => import('@/pages/admin/StatisticsPage').then((m) => ({ default: m.StatisticsPage })))
 const AdminAttendancePage = lazy(() => import('@/pages/admin/AttendancePage').then((m) => ({ default: m.AttendancePage })))
 const AdminJustificationsPage = lazy(() => import('@/pages/admin/JustificationsPage').then((m) => ({ default: m.JustificationsPage })))
 const BehaviorRecordsPage = lazy(() => import('@/pages/admin/BehaviorRecordsPage').then((m) => ({ default: m.BehaviorRecordsPage })))
@@ -60,6 +61,7 @@ const ADMIN_PAGES: Partial<Record<string, ComponentType>> = {
   cursos: CoursesPage,
   configuracion: ConfigurationPage,
   calificaciones: AdminGradesPage,
+  estadisticas: AdminStatisticsPage,
   asistencia: AdminAttendancePage,
   justificaciones: AdminJustificationsPage,
   convivencia: BehaviorRecordsPage,

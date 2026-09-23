@@ -1,5 +1,5 @@
-import { FileSpreadsheet, FileText, Pencil, Plus, Trash2 } from 'lucide-react'
-import { type FormEvent, useEffect, useState } from 'react'
+import { FileSpreadsheet, FileText, Filter, Pencil, Plus, Trash2, X } from 'lucide-react'
+import { type FormEvent, useEffect, useMemo, useState } from 'react'
 import { StudentPicker } from '@/components/admin/StudentPicker'
 import { ExcelImportModal } from '@/components/admin/ExcelImportModal'
 import { Badge } from '@/components/ui/Badge'
@@ -31,6 +31,12 @@ import {
   GRADE_IMPORT_HEADERS,
   GRADE_IMPORT_INSTRUCTIONS,
 } from '@/services/gradesImport.service'
+import {
+  findPerformanceLevel,
+  listPerformanceLevels,
+  performanceLevelColor,
+  type PerformanceLevel,
+} from '@/services/performanceLevels.service'
 import type { StudentWithCourse } from '@/services/students.service'
 import { Constants } from '@/types/database.types'
 import { GRADE_STATUS_LABELS } from '@/utils/labels'
@@ -65,6 +71,9 @@ export function GradesPage() {
   const { data: periods } = useSimpleQuery(listAcademicPeriods, [], () =>
     showToast('error', 'No se pudieron cargar los períodos académicos.'),
   )
+  const { data: performanceLevels } = useSimpleQuery(listPerformanceLevels, [] as PerformanceLevel[], () =>
+    showToast('error', 'No se pudieron cargar los desempeños.'),
+  )
 
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Grade | null>(null)
@@ -72,6 +81,33 @@ export function GradesPage() {
   const [errors, setErrors] = useState<Partial<Record<keyof GradeInput, string>>>({})
   const [saving, setSaving] = useState(false)
   const [importOpen, setImportOpen] = useState(false)
+
+  const [subjectFilter, setSubjectFilter] = useState('')
+  const [periodFilter, setPeriodFilter] = useState('')
+  const [statusFilter, setStatusFilter] = useState('')
+  const [levelFilter, setLevelFilter] = useState('')
+
+  const hasActiveFilters = Boolean(subjectFilter || periodFilter || statusFilter || levelFilter)
+
+  function clearFilters() {
+    setSubjectFilter('')
+    setPeriodFilter('')
+    setStatusFilter('')
+    setLevelFilter('')
+  }
+
+  const filteredGrades = useMemo(() => {
+    return grades.filter((g) => {
+      if (subjectFilter && g.subject_id !== subjectFilter) return false
+      if (periodFilter && g.period_id !== periodFilter) return false
+      if (statusFilter && g.status !== statusFilter) return false
+      if (levelFilter) {
+        const level = findPerformanceLevel(g.score, performanceLevels)
+        if (level?.slug !== levelFilter) return false
+      }
+      return true
+    })
+  }, [grades, subjectFilter, periodFilter, statusFilter, levelFilter, performanceLevels])
 
   function reloadGrades() {
     setGradesVersion((v) => v + 1)
@@ -190,6 +226,16 @@ export function GradesPage() {
       ),
     },
     {
+      key: 'level',
+      header: 'Desempeño',
+      render: (g) => {
+        const level = findPerformanceLevel(g.score, performanceLevels)
+        if (!level) return '—'
+        const color = performanceLevelColor(level.slug)
+        return <Badge variant={color.badge}>{level.name}</Badge>
+      },
+    },
+    {
       key: 'status',
       header: 'Estado',
       render: (g) => (
@@ -246,19 +292,81 @@ export function GradesPage() {
         />
       ) : (
         <>
-          <div className="mb-4 flex justify-end">
-            <Button onClick={openCreate}>
+          <div className="mb-4 flex flex-col gap-3 rounded-xl border border-neutral-200 bg-white p-4 sm:flex-row sm:flex-wrap sm:items-end">
+            <div className="flex items-center gap-2 text-sm font-medium text-neutral-500 sm:pb-2.5">
+              <Filter className="h-4 w-4" />
+              Filtros
+            </div>
+            <Select
+              value={subjectFilter}
+              onChange={(e) => setSubjectFilter(e.target.value)}
+              className="sm:w-44"
+            >
+              <option value="">Toda asignatura</option>
+              {subjects.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={periodFilter}
+              onChange={(e) => setPeriodFilter(e.target.value)}
+              className="sm:w-44"
+            >
+              <option value="">Todo período</option>
+              {periods.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {periodLabel(p)}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="sm:w-40"
+            >
+              <option value="">Todo estado</option>
+              {Constants.public.Enums.grade_status.map((status) => (
+                <option key={status} value={status}>
+                  {GRADE_STATUS_LABELS[status]}
+                </option>
+              ))}
+            </Select>
+            <Select
+              value={levelFilter}
+              onChange={(e) => setLevelFilter(e.target.value)}
+              className="sm:w-40"
+            >
+              <option value="">Todo desempeño</option>
+              {performanceLevels.map((level) => (
+                <option key={level.id} value={level.slug}>
+                  {level.name}
+                </option>
+              ))}
+            </Select>
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters}>
+                <X className="h-4 w-4" />
+                Limpiar filtros
+              </Button>
+            )}
+            <Button onClick={openCreate} className="sm:ml-auto">
               <Plus className="h-4 w-4" />
               Nueva calificación
             </Button>
           </div>
           <Table
             columns={columns}
-            data={grades}
+            data={filteredGrades}
             keyField={(g) => g.id}
             loading={loadingGrades}
-            emptyTitle="Sin calificaciones registradas"
-            emptyDescription="Registra la primera calificación de este estudiante."
+            emptyTitle={hasActiveFilters ? 'Sin resultados para estos filtros' : 'Sin calificaciones registradas'}
+            emptyDescription={
+              hasActiveFilters
+                ? 'Prueba a ajustar o limpiar los filtros.'
+                : 'Registra la primera calificación de este estudiante.'
+            }
           />
         </>
       )}
