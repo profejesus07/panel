@@ -16,7 +16,7 @@ export function Pagination({ page, pageSize, total, onPageChange }: PaginationPr
   if (total === 0) return null
 
   return (
-    <div className="flex flex-col items-center justify-between gap-3 border-t border-neutral-200 bg-white px-4 py-3 sm:flex-row">
+    <div className="mt-3 flex flex-col items-center justify-between gap-3 border-t border-neutral-200/80 pt-3 sm:flex-row">
       <p className="text-sm text-neutral-500">
         Mostrando <span className="font-medium text-neutral-700">{from}</span>–
         <span className="font-medium text-neutral-700">{to}</span> de{' '}

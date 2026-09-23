@@ -25,10 +25,10 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             ref={ref}
             id={selectId}
             className={clsx(
-              'block w-full appearance-none rounded-lg border bg-white px-3.5 py-2.5 pr-9 text-sm text-neutral-900 shadow-sm transition-colors focus:outline-none focus:ring-2',
+              'block w-full appearance-none rounded-lg border bg-white px-3.5 py-2.5 pr-9 text-sm text-neutral-900 shadow-soft transition-all focus:outline-none focus:ring-4',
               error
-                ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100'
-                : 'border-neutral-300 focus:border-brand-500 focus:ring-brand-100',
+                ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-500/10'
+                : 'border-neutral-200 focus:border-brand-500 focus:ring-brand-500/10',
               className,
             )}
             aria-invalid={Boolean(error)}

@@ -8,7 +8,7 @@ export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
   const [menuOpen, setMenuOpen] = useState(false)
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200 bg-white px-4 print:hidden sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 flex h-16 items-center justify-between border-b border-neutral-200/70 bg-white/85 px-4 backdrop-blur-md print:hidden sm:px-6 lg:px-8">
       <button
         type="button"
         onClick={onOpenMobileMenu}
@@ -26,7 +26,7 @@ export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
           onClick={() => setMenuOpen((open) => !open)}
           className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-neutral-100"
         >
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-100 text-brand-700">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 text-white shadow-sm">
             <UserIcon className="h-4 w-4" />
           </div>
           <span className="hidden text-left sm:block">
@@ -43,7 +43,7 @@ export function Navbar({ onOpenMobileMenu }: { onOpenMobileMenu: () => void }) {
         {menuOpen && (
           <>
             <div className="fixed inset-0 z-10" onClick={() => setMenuOpen(false)} />
-            <div className="absolute right-0 z-20 mt-2 w-48 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+            <div className="animate-in-pop absolute right-0 z-20 mt-2 w-48 rounded-xl border border-neutral-200/80 bg-white py-1 shadow-elevated">
               <button
                 type="button"
                 onClick={() => void signOut()}

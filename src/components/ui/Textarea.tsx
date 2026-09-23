@@ -24,10 +24,10 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           id={textareaId}
           rows={rows}
           className={clsx(
-            'block w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm transition-colors placeholder:text-neutral-400 focus:outline-none focus:ring-2',
+            'block w-full resize-y rounded-lg border px-3.5 py-2.5 text-sm text-neutral-900 shadow-soft transition-all placeholder:text-neutral-400 focus:outline-none focus:ring-4',
             error
-              ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-100'
-              : 'border-neutral-300 focus:border-brand-500 focus:ring-brand-100',
+              ? 'border-danger-300 focus:border-danger-500 focus:ring-danger-500/10'
+              : 'border-neutral-200 focus:border-brand-500 focus:ring-brand-500/10',
             className,
           )}
           aria-invalid={Boolean(error)}

@@ -30,17 +30,17 @@ export function Table<T>({
   onRowClick,
 }: TableProps<T>) {
   return (
-    <div className="overflow-hidden rounded-xl border border-neutral-200 bg-white">
+    <div className="overflow-hidden rounded-xl border border-neutral-200/80 bg-white shadow-soft">
       <div className="overflow-x-auto">
-        <table className="w-full min-w-full divide-y divide-neutral-200 text-left text-sm">
-          <thead className="bg-neutral-50">
+        <table className="w-full min-w-full divide-y divide-neutral-100 text-left text-sm">
+          <thead className="bg-neutral-50/80">
             <tr>
               {columns.map((col) => (
                 <th
                   key={col.key}
                   scope="col"
                   className={clsx(
-                    'whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wide text-neutral-500',
+                    'whitespace-nowrap px-4 py-3 text-xs font-semibold uppercase tracking-wider text-neutral-500',
                     col.className,
                   )}
                 >
@@ -49,7 +49,7 @@ export function Table<T>({
               ))}
             </tr>
           </thead>
-          <tbody className="divide-y divide-neutral-200">
+          <tbody className="divide-y divide-neutral-100">
             {loading &&
               Array.from({ length: 5 }).map((_, i) => (
                 <tr key={`skeleton-${i}`}>

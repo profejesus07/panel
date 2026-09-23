@@ -21,7 +21,7 @@ export function WelcomeBanner({ title, description }: WelcomeBannerProps) {
   const today = new Date().toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' })
 
   return (
-    <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 shadow-lg">
+    <section className="relative mb-6 overflow-hidden rounded-2xl bg-gradient-to-br from-brand-950 via-brand-800 to-brand-600 shadow-elevated ring-1 ring-black/5">
       <div className="pointer-events-none absolute -right-16 -top-24 h-72 w-72 rounded-full bg-accent-400/15 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-20 left-1/3 h-56 w-56 rounded-full bg-brand-400/20 blur-3xl" />
 

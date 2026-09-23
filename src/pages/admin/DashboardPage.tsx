@@ -69,7 +69,7 @@ export function DashboardPage() {
         {statCards.map((stat) => (
           <Card key={stat.label}>
             <CardContent className="flex items-center gap-4">
-              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-brand-50 text-brand-700">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-brand-50 to-brand-100 text-brand-700 ring-1 ring-inset ring-brand-200/50">
                 <stat.icon className="h-5 w-5" />
               </div>
               <div>

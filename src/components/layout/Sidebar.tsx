@@ -24,7 +24,7 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
 
       <aside
         className={clsx(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-brand-950 transition-transform duration-200 print:hidden lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-gradient-to-b from-brand-950 via-brand-950 to-brand-900 transition-transform duration-200 print:hidden lg:translate-x-0',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >
@@ -48,7 +48,7 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
           </button>
         </div>
 
-        <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
+        <nav className="scrollbar-thin flex-1 space-y-1 overflow-y-auto px-3 py-4">
           {items.map((item) => {
             const href = item.segment ? `${basePath}/${item.segment}` : basePath
             const Icon = item.icon
@@ -60,15 +60,24 @@ export function Sidebar({ basePath, items, mobileOpen, onCloseMobile }: SidebarP
                 onClick={onCloseMobile}
                 className={({ isActive }) =>
                   clsx(
-                    'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                    'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                     isActive
-                      ? 'bg-brand-700 text-white shadow-sm'
-                      : 'text-brand-100/80 hover:bg-white/10 hover:text-white',
+                      ? 'bg-white/10 text-white shadow-inner ring-1 ring-white/10'
+                      : 'text-brand-100/70 hover:bg-white/5 hover:text-white',
                   )
                 }
               >
-                <Icon className="h-5 w-5 shrink-0" />
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    <Icon
+                      className={clsx(
+                        'h-5 w-5 shrink-0 transition-colors',
+                        isActive ? 'text-accent-300' : 'text-brand-200/60 group-hover:text-white',
+                      )}
+                    />
+                    {item.label}
+                  </>
+                )}
               </NavLink>
             )
           })}

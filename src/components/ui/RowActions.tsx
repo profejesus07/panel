@@ -26,7 +26,7 @@ export function RowActions({ actions }: { actions: RowAction[] }) {
       {open && (
         <>
           <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 z-20 mt-1 w-44 rounded-lg border border-neutral-200 bg-white py-1 shadow-lg">
+          <div className="animate-in-pop absolute right-0 z-20 mt-1 w-44 rounded-xl border border-neutral-200/80 bg-white py-1 shadow-elevated">
             {actions.map((action) => (
               <button
                 key={action.label}

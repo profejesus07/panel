@@ -40,7 +40,7 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4">
       <div
-        className="fixed inset-0 bg-neutral-900/50"
+        className="animate-in-fade fixed inset-0 bg-neutral-900/50 backdrop-blur-sm"
         onClick={onClose}
         aria-hidden="true"
       />
@@ -49,11 +49,11 @@ export function Modal({ open, onClose, title, description, children, size = 'md'
         aria-modal="true"
         aria-labelledby="modal-title"
         className={clsx(
-          'relative my-8 w-full rounded-xl bg-white shadow-xl',
+          'animate-in-pop relative my-8 w-full rounded-2xl border border-neutral-200/60 bg-white shadow-elevated',
           SIZE_CLASSES[size],
         )}
       >
-        <div className="flex items-start justify-between border-b border-neutral-200 px-6 py-4">
+        <div className="flex items-start justify-between border-b border-neutral-100 px-6 py-4">
           <div>
             <h2 id="modal-title" className="text-base font-semibold text-neutral-900">
               {title}

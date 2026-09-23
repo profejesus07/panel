@@ -23,7 +23,7 @@ export function Tabs({ tabs, active, onChange }: TabsProps) {
             className={clsx(
               'border-b-2 px-1 py-3 text-sm font-medium transition-colors',
               active === tab.key
-                ? 'border-brand-700 text-brand-700'
+                ? 'border-brand-600 font-semibold text-brand-700'
                 : 'border-transparent text-neutral-500 hover:border-neutral-300 hover:text-neutral-700',
             )}
           >

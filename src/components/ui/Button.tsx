@@ -12,13 +12,15 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-brand-700 text-white hover:bg-brand-800 focus-visible:outline-brand-700',
+  primary:
+    'bg-gradient-to-b from-brand-600 to-brand-700 text-white shadow-brand hover:from-brand-700 hover:to-brand-800 focus-visible:outline-brand-700',
   secondary:
     'bg-neutral-100 text-neutral-900 hover:bg-neutral-200 focus-visible:outline-neutral-400',
   outline:
-    'border border-neutral-300 text-neutral-700 hover:bg-neutral-50 focus-visible:outline-neutral-400',
+    'border border-neutral-200 bg-white text-neutral-700 shadow-soft hover:border-neutral-300 hover:bg-neutral-50 focus-visible:outline-neutral-400',
   ghost: 'text-neutral-600 hover:bg-neutral-100 focus-visible:outline-neutral-400',
-  danger: 'bg-danger-600 text-white hover:bg-danger-700 focus-visible:outline-danger-600',
+  danger:
+    'bg-gradient-to-b from-danger-600 to-danger-700 text-white shadow-sm shadow-danger-900/20 hover:from-danger-700 hover:to-danger-800 focus-visible:outline-danger-600',
 }
 
 const sizeClasses: Record<Size, string> = {
@@ -37,7 +39,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={clsx(
-          'inline-flex items-center justify-center rounded-lg font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60',
+          'inline-flex items-center justify-center rounded-lg font-medium transition-all duration-150 active:scale-[0.98] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100',
           variantClasses[variant],
           sizeClasses[size],
           className,

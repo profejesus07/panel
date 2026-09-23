@@ -56,6 +56,11 @@
   --color-info-50: #eff6ff;
   --color-info-500: #3b82f6;
   --color-info-600: #2563eb;
+
+  /* Elevación: sombras suaves y por capas para una sensación más premium */
+  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.05);
+  --shadow-elevated: 0 4px 10px -2px rgb(15 23 42 / 0.06), 0 16px 32px -12px rgb(15 23 42 / 0.14);
+  --shadow-brand: 0 8px 20px -6px rgb(172 70 97 / 0.35);
 }
 
 @layer base {
@@ -74,10 +79,49 @@
   #root {
     @apply min-h-screen;
   }
+
+  ::selection {
+    @apply bg-brand-200/70 text-brand-900;
+  }
 }
 
 @layer utilities {
   .scrollbar-thin {
     scrollbar-width: thin;
+  }
+
+  .bg-mesh {
+    background-image:
+      radial-gradient(circle at 15% 15%, color-mix(in oklab, var(--color-brand-500) 12%, transparent), transparent 45%),
+      radial-gradient(circle at 85% 25%, color-mix(in oklab, var(--color-accent-400) 10%, transparent), transparent 40%),
+      radial-gradient(circle at 50% 100%, color-mix(in oklab, var(--color-brand-700) 8%, transparent), transparent 55%);
+  }
+
+  .animate-in-fade {
+    animation: fade-in 0.15s ease-out;
+  }
+
+  .animate-in-pop {
+    animation: pop-in 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes pop-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
