@@ -67,6 +67,18 @@ Funciones `SECURITY DEFINER`, de solo lectura, usadas dentro de las políticas R
 
 Redesplegar tras un cambio: `mcp__supabase__deploy_edge_function` con `project_id = ycajreajzzxsbmeuogux`, `name = create-user`, `verify_jwt = true`.
 
+### Edge Function `reset-database` (`supabase/functions/reset-database/`)
+
+Botón "Eliminar base de datos" en **Configuración → Zona de peligro**. Solo un admin puede invocarla, y debe reescribir su contraseña y la frase `ELIMINAR TODO`. Es irreversible:
+
+1. Elimina todas las cuentas de `auth.users` (y sus `profiles`) excepto la del admin que la ejecuta: nadie más puede volver a iniciar sesión.
+2. Vacía `students`, `guardians`, `student_guardians`, `courses`, `grades`, `attendance`, `absence_justifications`, `behavior_records`, `official_records` y `announcements`.
+3. Borra los archivos de los buckets `justificaciones`, `actas`, `boletines` y `anuncios`.
+
+Conserva `school_settings`, el bucket `institucion`, `subjects`, `academic_periods` y `performance_levels`. Si falla a mitad de camino se puede volver a ejecutar para terminar.
+
+Desplegar: `npx supabase functions deploy reset-database --project-ref ycajreajzzxsbmeuogux` (o `mcp__supabase__deploy_edge_function` con `verify_jwt = true`).
+
 ## Seguridad (RLS)
 
 Todas las tablas tienen RLS habilitado (`0016_row_level_security.sql`, afinado en `0019`/`0020`). Regla general:

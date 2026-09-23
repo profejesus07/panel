@@ -1,5 +1,6 @@
 import { BookOpen, CalendarRange, Gauge, Pencil, Plus, RotateCcw, Trash2, X } from 'lucide-react'
 import { type FormEvent, useState } from 'react'
+import { DangerZoneCard } from '@/components/admin/DangerZoneCard'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/Card'
@@ -48,6 +49,10 @@ export function ConfigurationPage() {
 
       <div className="mt-6">
         <PerformanceLevelsCard />
+      </div>
+
+      <div className="mt-6">
+        <DangerZoneCard />
       </div>
     </div>
   )
