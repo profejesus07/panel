@@ -294,6 +294,7 @@ export type Database = {
       grade_entries: {
         Row: {
           concept: string
+          concept_id: string | null
           created_at: string
           created_by: string | null
           graded_at: string
@@ -308,6 +309,7 @@ export type Database = {
         }
         Insert: {
           concept: string
+          concept_id?: string | null
           created_at?: string
           created_by?: string | null
           graded_at?: string
@@ -322,6 +324,7 @@ export type Database = {
         }
         Update: {
           concept?: string
+          concept_id?: string | null
           created_at?: string
           created_by?: string | null
           graded_at?: string
@@ -335,6 +338,13 @@ export type Database = {
           weight?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "grade_entries_concept_id_fkey"
+            columns: ["concept_id"]
+            isOneToOne: false
+            referencedRelation: "grading_concepts"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "grade_entries_period_id_fkey"
             columns: ["period_id"]
@@ -418,6 +428,67 @@ export type Database = {
           },
           {
             foreignKeyName: "grades_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grading_concepts: {
+        Row: {
+          course_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          name: string
+          period_id: string
+          position: number
+          subject_id: string
+          updated_at: string
+          weight: number | null
+        }
+        Insert: {
+          course_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name: string
+          period_id: string
+          position?: number
+          subject_id: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Update: {
+          course_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          name?: string
+          period_id?: string
+          position?: number
+          subject_id?: string
+          updated_at?: string
+          weight?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grading_concepts_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grading_concepts_period_id_fkey"
+            columns: ["period_id"]
+            isOneToOne: false
+            referencedRelation: "academic_periods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "grading_concepts_subject_id_fkey"
             columns: ["subject_id"]
             isOneToOne: false
             referencedRelation: "subjects"
@@ -835,6 +906,10 @@ export type Database = {
       is_admin: { Args: never; Returns: boolean }
       my_student_id: { Args: never; Returns: string }
       my_student_ids: { Args: never; Returns: string[] }
+      recompute_grade: {
+        Args: { p_period: string; p_student: string; p_subject: string }
+        Returns: undefined
+      }
       reject_justification: {
         Args: { p_justification_id: string; p_review_notes?: string }
         Returns: {

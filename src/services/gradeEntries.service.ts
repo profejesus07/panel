@@ -77,6 +77,43 @@ export async function deleteGradeEntry(id: string): Promise<void> {
   if (error) throw new Error(getDataErrorMessage(error))
 }
 
+export interface ConceptGradeUpsertInput {
+  id?: string
+  studentId: string
+  subjectId: string
+  periodId: string
+  conceptId: string
+  score: number
+  gradedAt?: string
+  observation?: string | null
+}
+
+// Crea o actualiza la nota de un estudiante sobre una actividad configurada
+// (grading_concepts). El texto del concepto y el porcentaje los completa el
+// trigger de la base de datos a partir de la actividad, así que aquí solo se
+// envía el concept_id: no hace falta (ni se debe) duplicarlos a mano.
+export async function upsertConceptGradeEntry(input: ConceptGradeUpsertInput): Promise<GradeEntry> {
+  const payload = {
+    concept: '',
+    weight: null,
+    concept_id: input.conceptId,
+    score: input.score,
+    graded_at: input.gradedAt ?? new Date().toISOString().slice(0, 10),
+    observation: input.observation ?? null,
+  }
+
+  if (input.id) {
+    return updateGradeEntry(input.id, payload)
+  }
+
+  return createGradeEntry({
+    ...payload,
+    student_id: input.studentId,
+    subject_id: input.subjectId,
+    period_id: input.periodId,
+  })
+}
+
 export type FinalGradeMethod = 'promedio' | 'ponderado' | 'mixto'
 
 export interface FinalGrade {
