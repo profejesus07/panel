@@ -84,6 +84,7 @@ export function StudentsPage() {
   const [search, setSearch] = useState('')
   const debouncedSearch = useDebouncedValue(search)
   const [statusFilter, setStatusFilter] = useState('')
+  const [courseFilter, setCourseFilter] = useState('')
   const [courses, setCourses] = useState<Course[]>([])
 
   const [modalOpen, setModalOpen] = useState(false)
@@ -106,6 +107,7 @@ export function StudentsPage() {
       pageSize: DEFAULT_PAGE_SIZE,
       search: debouncedSearch || undefined,
       status: (statusFilter || undefined) as Student['status'] | undefined,
+      courseId: courseFilter || undefined,
     },
     listStudents,
     () => showToast('error', 'No se pudieron cargar los estudiantes.'),
@@ -125,6 +127,11 @@ export function StudentsPage() {
 
   function handleStatusFilterChange(value: string) {
     setStatusFilter(value)
+    setPage(1)
+  }
+
+  function handleCourseFilterChange(value: string) {
+    setCourseFilter(value)
     setPage(1)
   }
 
@@ -311,6 +318,18 @@ export function StudentsPage() {
             className="pl-10"
           />
         </div>
+        <Select
+          value={courseFilter}
+          onChange={(e) => handleCourseFilterChange(e.target.value)}
+          className="sm:w-48"
+        >
+          <option value="">Todos los cursos</option>
+          {courses.map((course) => (
+            <option key={course.id} value={course.id}>
+              {courseLabel(course)} ({course.academic_year})
+            </option>
+          ))}
+        </Select>
         <Select
           value={statusFilter}
           onChange={(e) => handleStatusFilterChange(e.target.value)}

@@ -5,6 +5,7 @@ import {
   FileSpreadsheet,
   GraduationCap,
   ListChecks,
+  MessageSquare,
   Pencil,
   Percent,
   Plus,
@@ -12,7 +13,7 @@ import {
   Trash2,
   UsersRound,
 } from 'lucide-react'
-import { type FormEvent, useEffect, useMemo, useState } from 'react'
+import { type FormEvent, useCallback, useEffect, useMemo, useState } from 'react'
 import { ExcelImportModal } from '@/components/admin/ExcelImportModal'
 import { Badge } from '@/components/ui/Badge'
 import { Button } from '@/components/ui/Button'
@@ -80,20 +81,11 @@ function todayISO(): string {
 interface ConceptForm {
   name: string
   weight: string
+  date: string
 }
 
 function emptyConceptForm(): ConceptForm {
-  return { name: '', weight: '' }
-}
-
-interface CellForm {
-  score: string
-  graded_at: string
-  observation: string
-}
-
-function emptyCellForm(): CellForm {
-  return { score: '', graded_at: todayISO(), observation: '' }
+  return { name: '', weight: '', date: todayISO() }
 }
 
 export function GradesPage() {
@@ -271,7 +263,11 @@ export function GradesPage() {
 
   function openEditConcept(concept: GradingConcept) {
     setEditingConcept(concept)
-    setConceptForm({ name: concept.name, weight: concept.weight === null ? '' : String(concept.weight) })
+    setConceptForm({
+      name: concept.name,
+      weight: concept.weight === null ? '' : String(concept.weight),
+      date: concept.date,
+    })
     setConceptErrors({})
     setConceptModalOpen(true)
   }
@@ -292,6 +288,7 @@ export function GradesPage() {
         next.weight = `Con este porcentaje la suma sería ${otherConceptWeightTotal + weight} %. Máximo disponible: ${100 - otherConceptWeightTotal} %.`
       }
     }
+    if (!conceptForm.date) next.date = 'La fecha es obligatoria.'
     setConceptErrors(next)
     return Object.keys(next).length === 0
   }
@@ -306,6 +303,7 @@ export function GradesPage() {
       period_id: periodId,
       name: conceptForm.name.trim(),
       weight: conceptForm.weight.trim() ? Number(conceptForm.weight.replace(',', '.')) : null,
+      date: conceptForm.date,
     }
 
     setSavingConcept(true)
@@ -314,6 +312,7 @@ export function GradesPage() {
         await updateGradingConcept(editingConcept.id, {
           name: payload.name,
           weight: payload.weight,
+          date: payload.date,
         })
         showToast('success', 'Actividad actualizada correctamente.')
       } else {
@@ -348,78 +347,89 @@ export function GradesPage() {
   }
 
   // ---------------------------------------------------------------------
-  // Cuadrícula de notas: una celda por estudiante + actividad.
+  // Cuadrícula de notas: una celda editable por estudiante + actividad.
+  // La nota se escribe directamente en la celda (sin ventana emergente); la
+  // fecha la toma de la actividad. El modal solo se usa para la observación
+  // opcional y para eliminar la nota.
   // ---------------------------------------------------------------------
-  const [cellTarget, setCellTarget] = useState<{ result: StudentResult; concept: GradingConcept } | null>(null)
-  const [cellForm, setCellForm] = useState<CellForm>(emptyCellForm())
-  const [cellError, setCellError] = useState<string | undefined>()
-  const [savingCell, setSavingCell] = useState(false)
+  const saveScore = useCallback(
+    async (result: StudentResult, concept: GradingConcept, score: number): Promise<void> => {
+      const entry = result.entries.find((e) => e.concept_id === concept.id) ?? null
+      try {
+        await upsertConceptGradeEntry({
+          id: entry?.id,
+          studentId: result.student.id,
+          subjectId,
+          periodId,
+          conceptId: concept.id,
+          score,
+          gradedAt: concept.date,
+          observation: entry?.observation ?? null,
+        })
+        reload()
+      } catch (error) {
+        showToast('error', error instanceof Error ? error.message : 'No se pudo guardar la nota.')
+        throw error
+      }
+    },
+    [subjectId, periodId, showToast],
+  )
 
-  const cellEntry = cellTarget
-    ? (cellTarget.result.entries.find((e) => e.concept_id === cellTarget.concept.id) ?? null)
+  const [detailsTarget, setDetailsTarget] = useState<{ result: StudentResult; concept: GradingConcept } | null>(null)
+  const [observationDraft, setObservationDraft] = useState('')
+  const [savingDetails, setSavingDetails] = useState(false)
+
+  const detailsEntry = detailsTarget
+    ? (detailsTarget.result.entries.find((e) => e.concept_id === detailsTarget.concept.id) ?? null)
     : null
 
-  function openCell(result: StudentResult, concept: GradingConcept) {
+  function openDetails(result: StudentResult, concept: GradingConcept) {
     const entry = result.entries.find((e) => e.concept_id === concept.id) ?? null
-    setCellTarget({ result, concept })
-    setCellForm({
-      score: entry ? String(entry.score) : '',
-      graded_at: entry?.graded_at ?? todayISO(),
-      observation: entry?.observation ?? '',
-    })
-    setCellError(undefined)
+    if (!entry) return
+    setDetailsTarget({ result, concept })
+    setObservationDraft(entry.observation ?? '')
   }
 
-  async function submitCell(event: FormEvent) {
+  async function submitDetails(event: FormEvent) {
     event.preventDefault()
-    if (!cellTarget) return
+    if (!detailsTarget || !detailsEntry) return
 
-    const score = Number(cellForm.score.replace(',', '.'))
-    if (!cellForm.score.trim() || Number.isNaN(score) || score < 0 || score > maxScore) {
-      setCellError(`La nota debe estar entre 0 y ${maxScore}.`)
-      return
-    }
-    if (!cellForm.graded_at) {
-      setCellError('La fecha es obligatoria.')
-      return
-    }
-
-    setSavingCell(true)
+    setSavingDetails(true)
     try {
       await upsertConceptGradeEntry({
-        id: cellEntry?.id,
-        studentId: cellTarget.result.student.id,
+        id: detailsEntry.id,
+        studentId: detailsTarget.result.student.id,
         subjectId,
         periodId,
-        conceptId: cellTarget.concept.id,
-        score,
-        gradedAt: cellForm.graded_at,
-        observation: cellForm.observation.trim() || null,
+        conceptId: detailsTarget.concept.id,
+        score: detailsEntry.score,
+        gradedAt: detailsEntry.graded_at,
+        observation: observationDraft.trim() || null,
       })
-      showToast('success', 'Nota guardada correctamente.')
-      setCellTarget(null)
+      showToast('success', 'Observación guardada correctamente.')
+      setDetailsTarget(null)
       reload()
     } catch (error) {
-      showToast('error', error instanceof Error ? error.message : 'No se pudo guardar la nota.')
+      showToast('error', error instanceof Error ? error.message : 'No se pudo guardar la observación.')
     } finally {
-      setSavingCell(false)
+      setSavingDetails(false)
     }
   }
 
   async function handleDeleteCellEntry() {
-    if (!cellEntry) return
+    if (!detailsEntry) return
     const confirmed = await confirm({
       title: '¿Eliminar esta nota?',
-      description: `Se eliminará la nota de "${cellTarget?.concept.name}" y se recalculará la nota final.`,
+      description: `Se eliminará la nota de "${detailsTarget?.concept.name}" y se recalculará la nota final.`,
       confirmLabel: 'Eliminar',
       variant: 'danger',
     })
     if (!confirmed) return
 
     try {
-      await deleteGradeEntry(cellEntry.id)
+      await deleteGradeEntry(detailsEntry.id)
       showToast('success', 'Nota eliminada correctamente.')
-      setCellTarget(null)
+      setDetailsTarget(null)
       reload()
     } catch (error) {
       showToast('error', error instanceof Error ? error.message : 'No se pudo eliminar la nota.')
@@ -446,26 +456,15 @@ export function GradesPage() {
       render: (r) => {
         const entry = r.entries.find((e) => e.concept_id === concept.id) ?? null
         return (
-          <div className="flex justify-center">
-            {entry ? (
-              <button
-                type="button"
-                onClick={() => openCell(r, concept)}
-                className="transition-transform hover:scale-105"
-              >
-                <ScoreBadge score={entry.score} levels={performanceLevels} />
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => openCell(r, concept)}
-                aria-label={`Calificar ${studentFullName(r.student)} en ${concept.name}`}
-                className="flex h-7 w-11 items-center justify-center rounded-md border border-dashed border-neutral-300 text-neutral-300 transition-colors hover:border-brand-400 hover:text-brand-500"
-              >
-                <Plus className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
+          <GradeCell
+            entry={entry}
+            maxScore={maxScore}
+            levels={performanceLevels}
+            ariaLabel={`Nota de ${studentFullName(r.student)} en ${concept.name}`}
+            onSave={(score) => saveScore(r, concept, score)}
+            onInvalid={(message) => showToast('error', message)}
+            onOpenDetails={entry ? () => openDetails(r, concept) : undefined}
+          />
         )
       },
     }))
@@ -487,7 +486,7 @@ export function GradesPage() {
       },
     }
     return [studentColumn, ...conceptColumns, finalColumn]
-  }, [concepts, performanceLevels])
+  }, [concepts, performanceLevels, maxScore, saveScore, showToast])
 
   const subjectName = subjects.find((s) => s.id === subjectId)?.name ?? ''
   const period = periods.find((p) => p.id === periodId)
@@ -698,6 +697,14 @@ export function GradesPage() {
                 : `Ya asignado en otras actividades: ${formatScore(otherConceptWeightTotal)} %. Disponible: ${formatScore(100 - otherConceptWeightTotal)} %.`
             }
           />
+          <Input
+            label="Fecha de la actividad"
+            type="date"
+            value={conceptForm.date}
+            onChange={(e) => setConceptForm((f) => ({ ...f, date: e.target.value }))}
+            error={conceptErrors.date}
+            hint={conceptErrors.date ? undefined : 'Se usará como fecha de las notas que registres para esta actividad.'}
+          />
           <div className="flex justify-end gap-3 pt-2">
             <Button type="button" variant="outline" onClick={() => setConceptModalOpen(false)}>
               Cancelar
@@ -709,59 +716,36 @@ export function GradesPage() {
         </form>
       </Modal>
 
-      {/* Modal: nota de un estudiante sobre una actividad */}
+      {/* Modal: observación de una nota ya registrada (la nota se edita directo en la celda) */}
       <Modal
-        open={cellTarget !== null}
-        onClose={() => setCellTarget(null)}
-        title={cellTarget ? cellTarget.concept.name : ''}
-        description={cellTarget ? studentFullName(cellTarget.result.student) : undefined}
+        open={detailsTarget !== null}
+        onClose={() => setDetailsTarget(null)}
+        title={detailsTarget ? detailsTarget.concept.name : ''}
+        description={detailsTarget ? studentFullName(detailsTarget.result.student) : undefined}
         size="sm"
       >
-        {cellTarget && (
-          <form onSubmit={submitCell} className="space-y-4" noValidate>
+        {detailsTarget && detailsEntry && (
+          <form onSubmit={submitDetails} className="space-y-4" noValidate>
             <div className="flex items-center gap-2 rounded-lg bg-neutral-50 px-3 py-2 text-xs text-neutral-500">
               <Percent className="h-3.5 w-3.5 shrink-0" />
-              {cellTarget.concept.weight !== null
-                ? `Esta actividad vale ${formatScore(cellTarget.concept.weight)} % de la nota final.`
-                : 'Esta actividad no tiene porcentaje fijo: se promedia con las demás que tampoco lo tengan.'}
+              Nota: {formatScore(detailsEntry.score)} · {new Date(`${detailsEntry.graded_at}T00:00:00`).toLocaleDateString('es-CO')}
             </div>
-            <Input
-              label={`Nota (0 a ${maxScore})`}
-              type="number"
-              inputMode="decimal"
-              step="0.1"
-              min={0}
-              max={maxScore}
-              autoFocus
-              value={cellForm.score}
-              onChange={(e) => setCellForm((f) => ({ ...f, score: e.target.value }))}
-              error={cellError}
-            />
-            <Input
-              label="Fecha"
-              type="date"
-              value={cellForm.graded_at}
-              onChange={(e) => setCellForm((f) => ({ ...f, graded_at: e.target.value }))}
-            />
             <Textarea
               label="Observación (opcional)"
-              value={cellForm.observation}
-              onChange={(e) => setCellForm((f) => ({ ...f, observation: e.target.value }))}
+              autoFocus
+              value={observationDraft}
+              onChange={(e) => setObservationDraft(e.target.value)}
             />
             <div className="flex items-center justify-between gap-3 pt-2">
-              {cellEntry ? (
-                <Button type="button" variant="ghost" onClick={() => void handleDeleteCellEntry()}>
-                  <Trash2 className="h-4 w-4" />
-                  Eliminar
-                </Button>
-              ) : (
-                <span />
-              )}
+              <Button type="button" variant="ghost" onClick={() => void handleDeleteCellEntry()}>
+                <Trash2 className="h-4 w-4" />
+                Eliminar nota
+              </Button>
               <div className="flex gap-3">
-                <Button type="button" variant="outline" onClick={() => setCellTarget(null)}>
+                <Button type="button" variant="outline" onClick={() => setDetailsTarget(null)}>
                   Cancelar
                 </Button>
-                <Button type="submit" loading={savingCell}>
+                <Button type="submit" loading={savingDetails}>
                   Guardar
                 </Button>
               </div>
@@ -785,6 +769,114 @@ export function GradesPage() {
         parseRow={createGradeRowParser(subjects, periods)}
         onImport={bulkImportGrades}
       />
+    </div>
+  )
+}
+
+interface GradeCellProps {
+  entry: GradeEntry | null
+  maxScore: number
+  levels: PerformanceLevel[]
+  ariaLabel: string
+  onSave: (score: number) => Promise<void>
+  onInvalid: (message: string) => void
+  onOpenDetails?: () => void
+}
+
+// Celda editable de la cuadrícula: clic para escribir la nota directamente
+// (sin ventana emergente), Enter o clic afuera para guardar. El detalle
+// (observación, eliminar) queda en un botón secundario que abre un modal.
+function GradeCell({ entry, maxScore, levels, ariaLabel, onSave, onInvalid, onOpenDetails }: GradeCellProps) {
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  function startEditing() {
+    setDraft(entry ? String(entry.score) : '')
+    setEditing(true)
+  }
+
+  async function commit() {
+    const raw = draft.trim()
+    if (!raw) {
+      setEditing(false)
+      return
+    }
+    const score = Number(raw.replace(',', '.'))
+    if (Number.isNaN(score) || score < 0 || score > maxScore) {
+      onInvalid(`La nota debe estar entre 0 y ${maxScore}.`)
+      setEditing(false)
+      return
+    }
+    if (entry && score === entry.score) {
+      setEditing(false)
+      return
+    }
+    setSaving(true)
+    try {
+      await onSave(score)
+    } catch {
+      // El error ya se muestra con un toast en onSave.
+    } finally {
+      setSaving(false)
+      setEditing(false)
+    }
+  }
+
+  if (editing) {
+    return (
+      <div className="flex justify-center">
+        <input
+          type="number"
+          inputMode="decimal"
+          step="0.1"
+          min={0}
+          max={maxScore}
+          autoFocus
+          disabled={saving}
+          aria-label={ariaLabel}
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onFocus={(e) => e.currentTarget.select()}
+          onBlur={() => void commit()}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              e.preventDefault()
+              void commit()
+            } else if (e.key === 'Escape') {
+              setEditing(false)
+            }
+          }}
+          className="h-7 w-14 rounded-md border border-brand-400 text-center text-sm tabular-nums outline-none ring-2 ring-brand-100"
+        />
+      </div>
+    )
+  }
+
+  return (
+    <div className="group flex items-center justify-center gap-1">
+      <button type="button" onClick={startEditing} aria-label={ariaLabel} className="transition-transform hover:scale-105">
+        {entry ? (
+          <ScoreBadge score={entry.score} levels={levels} />
+        ) : (
+          <span className="flex h-7 w-11 items-center justify-center rounded-md border border-dashed border-neutral-300 text-neutral-300 transition-colors hover:border-brand-400 hover:text-brand-500">
+            <Plus className="h-3.5 w-3.5" />
+          </span>
+        )}
+      </button>
+      {onOpenDetails && (
+        <button
+          type="button"
+          onClick={onOpenDetails}
+          aria-label="Ver observación de la nota"
+          className={clsx(
+            'rounded-full p-1 text-neutral-300 hover:bg-neutral-100 hover:text-neutral-600',
+            entry?.observation ? 'text-brand-400' : 'opacity-0 group-hover:opacity-100',
+          )}
+        >
+          <MessageSquare className="h-3 w-3" />
+        </button>
+      )}
     </div>
   )
 }

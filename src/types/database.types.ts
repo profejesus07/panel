@@ -440,6 +440,7 @@ export type Database = {
           course_id: string
           created_at: string
           created_by: string | null
+          date: string
           id: string
           name: string
           period_id: string
@@ -452,6 +453,7 @@ export type Database = {
           course_id: string
           created_at?: string
           created_by?: string | null
+          date?: string
           id?: string
           name: string
           period_id: string
@@ -464,6 +466,7 @@ export type Database = {
           course_id?: string
           created_at?: string
           created_by?: string | null
+          date?: string
           id?: string
           name?: string
           period_id?: string
